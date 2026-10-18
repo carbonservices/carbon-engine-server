@@ -2,8 +2,6 @@
 
 Headless C++20 REST API daemon for corporate ESG and statutory SEBI BRSR compliance analytics, automated extraction, vector search, and audit report generation.
 
----
-
 ## Architecture & Components
 
 | Component | Technology | Purpose |
@@ -17,8 +15,6 @@ Headless C++20 REST API daemon for corporate ESG and statutory SEBI BRSR complia
 
 > [!NOTE]
 > **Authentication Model**: Bring-Your-Own-Key (BYOK). Clients pass their Gemini API key per request via the `X-Gemini-API-Key` header or `api_key` payload parameter. The server does not store or manage server-wide API credentials.
-
----
 
 ## Container Deployment
 
@@ -68,8 +64,6 @@ export CARBON_ENGINE_SERVER_URL="https://<SERVICE_URL>"
 ./carbon-engine-client
 ```
 
----
-
 ## Environment Variables
 
 | Variable | Default | Description |
@@ -84,8 +78,6 @@ export CARBON_ENGINE_SERVER_URL="https://<SERVICE_URL>"
 | `CARBON_ENGINE_EMBD_MODEL` | `text-embedding-004` | Default Gemini embedding model. |
 | `CARBON_ENGINE_THREADS` | auto | Worker thread count for CPU pipelines. |
 | `TESSDATA_PREFIX` | `/app` | Directory containing `eng.traineddata` OCR language files. |
-
----
 
 ## API Reference
 
@@ -117,8 +109,6 @@ All endpoints return JSON responses and support global CORS. For complete reques
 | `DELETE` | `/api/reports` | Delete job, SQLite records, and vector index (`?job_id=`) | Public |
 | `GET` | `/api/schema/brsr` | Retrieve statutory schema metadata (Principles P1-P9) | Public |
 
----
-
 ## Local Compilation (Without Docker)
 
 Requires Ubuntu 22.04+ with Qt 6 (`qt6-base-dev`, `qt6-httpserver-dev`), OpenBLAS, and Tesseract.
@@ -132,8 +122,6 @@ cmake --build build --config Release --parallel $(nproc)
 
 ./build/__Builds/x64/bin/carbon-engine
 ```
-
----
 
 ## Standards & Policies
 
