@@ -20,6 +20,7 @@ This repository contains the `carbon-engine` server daemon packaged as a lightwe
 - [Supported REST APIs](#supported-rest-apis)
 - [API Reference Guide (API.md)](API.md)
 - [Local Compilation (Without Docker)](#local-compilation-without-docker)
+- [Contributing & Security](#contributing--security)
 - [License](#license)
 
 ---
@@ -232,6 +233,14 @@ cmake --build build --config Release --parallel $(nproc)
 # Execute
 ./build/__Builds/x64/bin/carbon-engine
 ```
+
+---
+
+## Contributing & Security
+
+- **Contributing Guide**: Please review [CONTRIBUTING.md](CONTRIBUTING.md) for C++20 standards, asynchronous HTTP server guidelines, and PR workflows.
+- **Security Policy**: For vulnerability reporting channels and BYOK credential isolation architecture, consult [SECURITY.md](SECURITY.md).
+- **Code of Conduct**: Community interaction standards are outlined in [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
 ---
 
