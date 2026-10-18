@@ -1,0 +1,29 @@
+# Build artifacts
+build/
+__Builds/
+bin/
+lib/
+cmake-build-*/
+.cache/
+
+# Third-party dependencies fetched at build time
+third-party/
+
+# Databases and runtime data
+data/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.lock
+
+# Models & OCR training data
+models/
+*.traineddata
+eng.traineddata
+
+# Logs and temporary files
+*.log
+tmp/
+.DS_Store
+Thumbs.db
+

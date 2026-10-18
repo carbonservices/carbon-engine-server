@@ -1,0 +1,16 @@
+.git
+.github
+build
+__Builds
+bin
+lib
+data
+models
+*.traineddata
+eng.traineddata
+*.sqlite*
+*.lock
+*.log
+.DS_Store
+third-party/*-build
+third-party/*-subbuild

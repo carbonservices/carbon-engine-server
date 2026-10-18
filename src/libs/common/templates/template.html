@@ -1,0 +1,2032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>{{ default(entity_name, "Business Responsibility & Sustainability Report") }} - BRSR {{ default(reporting_financial_year, "") }}</title>
+ <style>
+ /* ======================================================================
+ DATAVIZ REFERENCE PALETTE (validated: node scripts/validate_palette.js
+ "#2a78d6,#eb6834,#1baf7a,#eda100,#e87ba4,#008300,#4a3aa7,#e34948"
+ --mode light -> ALL CHECKS PASS. Contrast WARN on slots 3/4/5
+ (aqua/yellow/magenta) is mitigated throughout this document by always
+ pairing those fills with a visible data table alongside the chart - 
+ never color-alone. Do not hand-edit these hex values; if you need a
+ different brand palette, re-run the validator and replace the whole
+ block below with a new PASSing set. Light mode only: printed/PDF
+ reports do not need a dark theme, so no @media (prefers-color-scheme)
+ branch is defined here. */
+ :root {
+ /* ---- brand tokens for page chrome (headers, cover, bands, badges) ----
+ Separate from the validated dataviz palette below - chrome uses a
+ sustainability-report forest/gold direction, chart hues are untouched. */
+ --primary-color: #0f3d2e;
+ --secondary-color: #3f4a44;
+ --accent-color: #c98a2e;
+ --sage-accent: #7fae8e;
+ --border-color: #cbd5e1;
+ --bg-light: #f8fafc;
+
+ /* ---- dataviz chart chrome & ink ---- */
+ --viz-surface: #fcfcfb;
+ --viz-page: #f9f9f7;
+ --viz-ink: #0b0b0b;
+ --viz-ink-secondary:#52514e;
+ --viz-ink-muted: #898781;
+ --viz-gridline: #e1e0d9;
+ --viz-baseline: #c3c2b7;
+ --viz-good-text: #006300;
+ --viz-border: rgba(11,11,11,0.10);
+
+ /* ---- categorical (8 hues, fixed order - never cycle, never reorder) ---- */
+ --series-1: #2a78d6; /* blue */
+ --series-2: #eb6834; /* orange */
+ --series-3: #1baf7a; /* aqua */
+ --series-4: #eda100; /* yellow */
+ --series-5: #e87ba4; /* magenta */
+ --series-6: #008300; /* green */
+ --series-7: #4a3aa7; /* violet */
+ --series-8: #e34948; /* red */
+
+ /* ---- sequential (single hue, blue, light -> dark) ---- */
+ --seq-100: #cde2fb; --seq-150: #b7d3f6; --seq-200: #9ec5f4; --seq-250: #86b6ef;
+ --seq-300: #6da7ec; --seq-350: #5598e7; --seq-400: #3987e5; --seq-450: #2a78d6;
+ --seq-500: #256abf; --seq-550: #1c5cab; --seq-600: #184f95; --seq-650: #104281;
+ --seq-700: #0d366b;
+
+ /* ---- diverging (blue <-> red, neutral gray midpoint) ---- */
+ --div-neg: #2a78d6;
+ --div-mid: #f0efec;
+ --div-pos: #e34948;
+
+ /* ---- status (fixed - never themed, always icon + label) ---- */
+ --status-good: #0ca30c;
+ --status-warning: #fab219;
+ --status-serious: #ec835a;
+ --status-critical: #d03b3b;
+ }
+ * { box-sizing: border-box; }
+ body {
+ font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+ color: var(--primary-color);
+ line-height: 1.5;
+ margin: 0 auto;
+ max-width: 1200px;
+ padding: 20px;
+ background: var(--viz-page);
+ }
+
+ /* Print-specific rules for 60-70 page generation */
+ @media print {
+ body { padding: 0; max-width: 100%; background: #fff; }
+ .page-break { page-break-before: always; }
+ .no-print { display: none !important; }
+ h1, h2, h3, h4 { page-break-after: avoid; }
+ table, tr, td, th { page-break-inside: avoid; }
+ .chart-card { page-break-inside: avoid; }
+ .principle-band, .section-divider-img, .stat-tile { page-break-inside: avoid; }
+ .cover-page { background-image: none; background-color: var(--primary-color); }
+ @page { size: A4; margin: 15mm; }
+ }
+
+ /* Layout & Typography */
+ h1 { color: var(--primary-color); font-size: 24pt; border-bottom: 2px solid var(--accent-color); padding-bottom: 10px; }
+ h2 { color: var(--secondary-color); font-size: 18pt; margin-top: 30px; }
+ h3 { font-size: 14pt; color: var(--accent-color); margin-top: 24px; }
+ h4 { font-size: 12pt; color: var(--secondary-color); margin-top: 18px; }
+ h5 { font-size: 10.5pt; color: var(--secondary-color); margin-top: 14px; font-weight: 600; }
+ p { margin: 8px 0; }
+ .guidance-note {
+ background-color: var(--bg-light);
+ border-left: 4px solid var(--accent-color);
+ padding: 12px 16px;
+ margin: 20px 0;
+ font-size: 0.9em;
+ color: var(--secondary-color);
+ }
+ .section-intro { font-size: 0.95em; color: var(--secondary-color); }
+
+ /* Data Tables */
+ table {
+ width: 100%;
+ border-collapse: collapse;
+ margin: 16px 0;
+ font-size: 9.5pt;
+ background: #fff;
+ }
+ th, td {
+ border: 1px solid var(--border-color);
+ padding: 8px 10px;
+ text-align: left;
+ vertical-align: top;
+ }
+ th {
+ background-color: var(--bg-light);
+ font-weight: 600;
+ }
+ tbody tr:nth-child(even) { background: #fafbfc; }
+ .row-group { background-color: #eef2f7 !important; font-weight: 700; }
+ .text-center { text-align: center; }
+ .text-right { text-align: right; }
+ .num { font-variant-numeric: tabular-nums; }
+ .table-caption { font-size: 8.5pt; color: var(--viz-ink-muted); margin: -10px 0 10px; }
+
+ /* Variable Highlighting (For Dev Environment) */
+ .var {
+ color: #059669;
+ font-family: 'Courier New', Courier, monospace;
+ background: #d1fae5;
+ padding: 2px 4px;
+ border-radius: 3px;
+ }
+ body[data-debug="false"] .var { color: inherit; background: none; font-family: inherit; padding: 0; }
+
+ /* ================= COVER PAGE ================= */
+ .cover-page {
+ min-height: 90vh;
+ display: flex;
+ flex-direction: column;
+ justify-content: center;
+ align-items: center;
+ text-align: center;
+ background-color: var(--primary-color);
+ background-image:
+ linear-gradient(160deg, rgba(15,61,46,0.88) 0%, rgba(15,61,46,0.72) 55%, rgba(201,138,46,0.55) 100%),
+ url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1600&q=70&auto=format&fit=crop');
+ background-size: cover;
+ background-position: center;
+ border-radius: 12px;
+ padding: 60px 40px;
+ }
+ .cover-eyebrow {
+ text-transform: uppercase;
+ letter-spacing: 0.12em;
+ font-size: 11pt;
+ color: #eef6f0;
+ font-weight: 600;
+ }
+ .cover-title {
+ font-size: 30pt;
+ font-weight: 700;
+ color: #fff;
+ border-bottom: none;
+ margin: 12px 0 4px;
+ max-width: 780px;
+ text-shadow: 0 1px 6px rgba(0,0,0,0.35);
+ }
+ .cover-entity {
+ font-size: 22pt;
+ font-weight: 600;
+ color: #f0c26b;
+ margin: 4px 0 2px;
+ }
+ .cover-fy-badge {
+ display: inline-block;
+ margin-top: 10px;
+ padding: 6px 18px;
+ border-radius: 999px;
+ background: var(--accent-color);
+ color: #fff;
+ font-size: 12pt;
+ font-weight: 600;
+ letter-spacing: 0.03em;
+ }
+ .cover-meta { margin-top: 18px; font-size: 10pt; color: #eef6f0; max-width: 620px; }
+
+ /* KPI stat-tile row (dataviz stat-tile contract: label + value, delta optional) */
+ .kpi-row {
+ display: flex;
+ flex-wrap: wrap;
+ gap: 14px;
+ justify-content: center;
+ margin-top: 34px;
+ width: 100%;
+ }
+ .stat-tile {
+ background: var(--viz-surface);
+ border: 1px solid var(--viz-border);
+ border-radius: 10px;
+ padding: 14px 18px;
+ min-width: 150px;
+ flex: 1 1 150px;
+ text-align: left;
+ position: relative;
+ overflow: hidden;
+ }
+ .stat-tile .stat-icon {
+ position: absolute;
+ top: 8px;
+ right: 8px;
+ width: 30px;
+ height: 30px;
+ border-radius: 50%;
+ background-color: var(--sage-accent);
+ object-fit: cover;
+ border: 1px solid var(--viz-border);
+ }
+ .stat-tile .stat-label {
+ font-size: 8.5pt;
+ color: var(--viz-ink-secondary);
+ text-transform: uppercase;
+ letter-spacing: 0.04em;
+ max-width: 78%;
+ }
+ .stat-tile .stat-value {
+ font-size: 19pt;
+ font-weight: 700;
+ color: var(--viz-ink);
+ margin-top: 4px;
+ font-variant-numeric: proportional-nums;
+ }
+ .stat-tile .stat-delta { font-size: 9pt; margin-top: 2px; font-weight: 600; }
+ .stat-tile .stat-delta.up-good { color: var(--viz-good-text); }
+ .stat-tile .stat-delta.down-bad { color: var(--status-critical); }
+ .stat-tile .stat-unit { font-size: 8.5pt; color: var(--viz-ink-muted); font-weight: 400; }
+
+ .section-divider-img {
+ width: 100%;
+ height: 110px;
+ object-fit: cover;
+ border-radius: 8px;
+ margin-bottom: 14px;
+ background-color: var(--sage-accent);
+ max-height: 110px;
+ page-break-inside: avoid;
+ }
+
+ /* ================= TOC ================= */
+ .toc { background: #fff; border: 1px solid var(--border-color); border-radius: 8px; padding: 20px 26px; }
+ .toc ol { columns: 2; column-gap: 40px; padding-left: 20px; }
+ .toc li { margin-bottom: 6px; font-size: 10pt; }
+
+ /* ================= CHART CARD ================= */
+ .chart-card {
+ background: var(--viz-surface);
+ border: 1px solid var(--viz-border);
+ border-radius: 10px;
+ padding: 18px 20px 8px;
+ margin: 20px 0;
+ }
+ .chart-card h4 { margin-top: 0; color: var(--viz-ink); }
+ .chart-card .chart-subtitle { font-size: 9pt; color: var(--viz-ink-secondary); margin: -4px 0 12px; }
+ .chart-canvas-wrap { position: relative; height: 320px; margin-bottom: 10px; }
+ .chart-canvas-wrap.short { height: 240px; }
+ .chart-legend-note { font-size: 8pt; color: var(--viz-ink-muted); margin-top: 4px; }
+ .chart-data-table { font-size: 8.5pt; margin-top: 6px; }
+ .chart-data-table th, .chart-data-table td { padding: 5px 8px; }
+ details.chart-table-toggle summary {
+ cursor: pointer;
+ font-size: 9pt;
+ color: var(--accent-color);
+ font-weight: 600;
+ margin-top: 8px;
+ }
+
+ /* ================= STATUS BADGES ================= */
+ .status-badge {
+ display: inline-flex;
+ align-items: center;
+ gap: 5px;
+ padding: 2px 9px;
+ border-radius: 999px;
+ font-size: 8.5pt;
+ font-weight: 600;
+ }
+ .status-badge::before { content: ''; width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+ .status-good { background: #eafbea; color: #0a5c0a; }
+ .status-good::before { background: var(--status-good); }
+ .status-warning { background: #fff6e0; color: #8a5b00; }
+ .status-warning::before { background: var(--status-warning); }
+ .status-serious { background: #fdeee6; color: #9c3d1c; }
+ .status-serious::before { background: var(--status-serious); }
+ .status-critical { background: #fbe6e6; color: #8f1f1f; }
+ .status-critical::before { background: var(--status-critical); }
+
+ /* ================= PRINCIPLE HEADER BAND ================= */
+ .principle-band {
+ background: linear-gradient(100deg, var(--primary-color) 0%, #1a5c45 100%);
+ color: #fff;
+ border-radius: 8px;
+ padding: 14px 20px;
+ margin-top: 10px;
+ display: flex;
+ align-items: center;
+ gap: 14px;
+ page-break-inside: avoid;
+ }
+ .principle-band .band-img {
+ width: 56px;
+ height: 56px;
+ border-radius: 6px;
+ object-fit: cover;
+ flex: 0 0 auto;
+ background-color: var(--sage-accent);
+ max-height: 56px;
+ }
+ .principle-band .band-text { flex: 1 1 auto; }
+ .principle-band .principle-no { font-size: 9pt; letter-spacing: 0.08em; opacity: 0.75; text-transform: uppercase; }
+ .principle-band .principle-title { font-size: 13.5pt; font-weight: 600; margin-top: 2px; }
+ .indicator-label {
+ display: inline-block;
+ font-size: 8pt;
+ font-weight: 700;
+ letter-spacing: 0.05em;
+ text-transform: uppercase;
+ padding: 3px 9px;
+ border-radius: 4px;
+ margin: 18px 0 4px;
+ }
+ .indicator-essential { background: #e0ecff; color: #1e3a8a; }
+ .indicator-leadership { background: #e0f7ea; color: #065f46; }
+
+ blockquote.narrative {
+ border-left: 3px solid var(--accent-color);
+ padding-left: 15px;
+ font-style: italic;
+ color: var(--secondary-color);
+ background: #fff;
+ padding: 12px 16px;
+ border-radius: 0 6px 6px 0;
+ }
+
+ .footer-note { font-size: 8pt; color: var(--viz-ink-muted); margin-top: 40px; border-top: 1px solid var(--viz-gridline); padding-top: 10px; }
+ </style>
+</head>
+<body data-debug="{{ default(debug_mode, "false") }}">
+
+ <!-- ================================================================
+ COVER PAGE
+ ================================================================ -->
+ <div class="cover-page viz-root">
+ <div class="cover-eyebrow">Business Responsibility &amp; Sustainability Report</div>
+ <h1 class="cover-title">{{ default(report_title, "Business Responsibility & Sustainability Report (BRSR)") }}</h1>
+ <div class="cover-entity"><span class="var">{{ default(entity_name, "&lt;Not provided&gt;") }}</span></div>
+ <div class="cover-fy-badge">FY <span class="var">{{ default(reporting_financial_year, "&lt;Not provided&gt;") }}</span></div>
+ <p class="cover-meta">
+ Prepared in accordance with the National Guidelines on Responsible Business Conduct (NGRBC) and
+ the SEBI (Listing Obligations and Disclosure Requirements) Regulations, 2015, Regulation 34(2)(f).
+ CIN: <span class="var">{{ default(entity_cin, "&lt;Not provided&gt;") }}</span> &middot; Reporting boundary: <span class="var">{{ default(reporting_boundary, "&lt;Not provided&gt;") }}</span>
+ </p>
+
+ <!-- Cover KPI summary row - stat-tile contract (label + value; delta optional) -->
+ <div class="kpi-row">
+ <div class="stat-tile">
+ <img class="stat-icon" loading="lazy" onerror="this.style.visibility='hidden'" alt="" src="https://images.unsplash.com/photo-1611273426858-450d8e3c9fce?w=80&q=60&auto=format&fit=crop">
+ <div class="stat-label">GHG Intensity (Scope 1+2)</div>
+ <div class="stat-value">{{ default(scope_1_2_intensity_current, "N/A") }} <span class="stat-unit">t CO2e/₹Cr</span></div>
+ {% if exists("scope_1_2_intensity_prev") and scope_1_2_intensity_prev != "" and scope_1_2_intensity_prev != "N/A" %}
+ <div class="stat-delta {% if default(scope_1_2_intensity_current, 0) <= default(scope_1_2_intensity_prev, 0) %}up-good{% else %}down-bad{% endif %}">
+ vs FY {{ default(previous_fy, "&lt;Not provided&gt;") }}: <span class="var">{{ default(scope_1_2_intensity_prev, "&lt;Not provided&gt;") }}</span>
+ </div>
+ {% endif %}
+ </div>
+ <div class="stat-tile">
+ <img class="stat-icon" loading="lazy" onerror="this.style.visibility='hidden'" alt="" src="https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=80&q=60&auto=format&fit=crop">
+ <div class="stat-label">Water Intensity</div>
+ <div class="stat-value">{{ default(p6_water_intensity_turnover_current, "N/A") }} <span class="stat-unit">KL/₹Cr</span></div>
+ </div>
+ <div class="stat-tile">
+ <img class="stat-icon" loading="lazy" onerror="this.style.visibility='hidden'" alt="" src="https://images.unsplash.com/photo-1521791136064-7986c2920216?w=80&q=60&auto=format&fit=crop">
+ <div class="stat-label">Women in Workforce</div>
+ <div class="stat-value">{{ default(emp_total_female_pct, "N/A") }}<span class="stat-unit">%</span></div>
+ </div>
+ <div class="stat-tile">
+ <img class="stat-icon" loading="lazy" onerror="this.style.visibility='hidden'" alt="" src="https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=80&q=60&auto=format&fit=crop">
+ <div class="stat-label">CSR Spend</div>
+ <div class="stat-value">₹<span class="var">{{ default(csr_spent_amount, "N/A") }}</span> <span class="stat-unit">Cr</span></div>
+ </div>
+ <div class="stat-tile">
+ <img class="stat-icon" loading="lazy" onerror="this.style.visibility='hidden'" alt="" src="https://images.unsplash.com/photo-1509391366360-2e959784a276?w=80&q=60&auto=format&fit=crop">
+ <div class="stat-label">Renewable Energy Share</div>
+ <div class="stat-value">{{ default(current_renewable_energy_pct, "N/A") }}<span class="stat-unit">%</span></div>
+ </div>
+ </div>
+ </div>
+
+ <div class="page-break"></div>
+
+ <!-- ================================================================
+ TABLE OF CONTENTS
+ ================================================================ -->
+ <div class="toc">
+ <h2 style="margin-top:0;">Table of Contents</h2>
+ <ol>
+ <li>Section A: General Disclosures</li>
+ <li>Section B: Management &amp; Process Disclosures</li>
+ <li>Section C: Principle-wise Performance Disclosures</li>
+ <li>&nbsp;&nbsp;Principle 1: Ethics, Transparency &amp; Accountability</li>
+ <li>&nbsp;&nbsp;Principle 2: Sustainable Products &amp; Processes</li>
+ <li>&nbsp;&nbsp;Principle 3: Employee Well-being</li>
+ <li>&nbsp;&nbsp;Principle 4: Stakeholder Engagement</li>
+ <li>&nbsp;&nbsp;Principle 5: Human Rights</li>
+ <li>&nbsp;&nbsp;Principle 6: Environment</li>
+ <li>&nbsp;&nbsp;Principle 7: Policy Advocacy</li>
+ <li>&nbsp;&nbsp;Principle 8: Inclusive Growth</li>
+ <li>&nbsp;&nbsp;Principle 9: Consumer Responsibility</li>
+ <li>BRSR Core: Assurance KPI Cross-Reference</li>
+ </ol>
+ </div>
+
+ <div class="page-break"></div>
+
+ <!-- ================================================================
+ SECTION A: GENERAL DISCLOSURES
+ ================================================================ -->
+ <div class="section viz-root" id="section-a">
+ <img class="section-divider-img" loading="lazy" onerror="this.style.visibility='hidden'" alt="Team collaborating in an office setting, representing corporate governance and general disclosures"
+ src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=1200&q=60&auto=format&fit=crop">
+ <h2>SECTION A: GENERAL DISCLOSURES</h2>
+ <div class="guidance-note">
+ <strong>Guidance:</strong> The term "reporting period" refers to the financial year for which the BRSR
+ is being prepared. Listed entities shall ensure consistency in reporting boundaries across the report.
+ </div>
+
+ <h3>I. Details of the Listed Entity</h3>
+ <table>
+ <tbody>
+ <tr><td width="55%">1. Corporate Identity Number (CIN) of the Listed Entity</td><td><span class="var">{{ default(entity_cin, "&lt;Not provided&gt;") }}</span></td></tr>
+ <tr><td>2. Name of the Listed Entity</td><td><span class="var">{{ default(entity_name, "&lt;Not provided&gt;") }}</span></td></tr>
+ <tr><td>3. Year of incorporation</td><td><span class="var">{{ default(year_of_incorporation, "&lt;Not provided&gt;") }}</span></td></tr>
+ <tr><td>4. Registered office address</td><td><span class="var">{{ default(registered_address, "&lt;Not provided&gt;") }}</span></td></tr>
+ <tr><td>5. Corporate address</td><td><span class="var">{{ default(corporate_address, "&lt;Not provided&gt;") }}</span></td></tr>
+ <tr><td>6. E-mail</td><td><span class="var">{{ default(contact_email, "&lt;Not provided&gt;") }}</span></td></tr>
+ <tr><td>7. Telephone</td><td><span class="var">{{ default(contact_telephone, "&lt;Not provided&gt;") }}</span></td></tr>
+ <tr><td>8. Website</td><td><span class="var">{{ default(website_url, "&lt;Not provided&gt;") }}</span></td></tr>
+ <tr><td>9. Financial year for which reporting is being done</td><td><span class="var">{{ default(reporting_financial_year, "&lt;Not provided&gt;") }}</span></td></tr>
+ <tr><td>10. Name of the Stock Exchange(s) where shares are listed</td><td><span class="var">{{ default(stock_exchanges, "&lt;Not provided&gt;") }}</span></td></tr>
+ <tr><td>11. Paid-up Capital</td><td><span class="var">{{ default(paid_up_capital, "&lt;Not provided&gt;") }}</span></td></tr>
+ <tr><td>12. Name and contact details (telephone, email address) of the person who may be contacted in case of any queries on the BRSR report</td><td><span class="var">{{ default(contact_person_details, "&lt;Not provided&gt;") }}</span></td></tr>
+ <tr><td>13. Reporting boundary - standalone or consolidated basis</td><td><span class="var">{{ default(reporting_boundary, "&lt;Not provided&gt;") }}</span></td></tr>
+ <tr><td>14. Name of assurance provider</td><td><span class="var">{{ default(assurance_provider_name, "&lt;Not provided&gt;") }}</span></td></tr>
+ <tr><td>15. Type of assurance obtained (Reasonable / Limited)</td><td><span class="var">{{ default(assurance_type, "&lt;Not provided&gt;") }}</span></td></tr>
+ </tbody>
+ </table>
+
+ <h3>II. Products/Services</h3>
+ <p>16. Details of business activities (accounting for 90% of the turnover):</p>
+ <table>
+ <thead><tr><th>S. No.</th><th>Description of Main Activity</th><th>Description of Business Activity</th><th>% of Turnover of the entity</th></tr></thead>
+ <tbody>
+ {% for activity in business_activities %}
+ <tr>
+ <td>{{ default(activity.s_no, loop.index1) }}</td>
+ <td>{{ default(activity.main_activity, "&lt;Not provided&gt;") }}</td>
+ <td>{{ default(activity.business_activity, "&lt;Not provided&gt;") }}</td>
+ <td class="text-right num">{{ default(activity.turnover_percentage, default(activity.turnover_pct, "&lt;Not provided&gt;")) }}</td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+
+ <p>17. Products/Services sold by the entity (accounting for 90% of the entity's Turnover):</p>
+ <table>
+ <thead><tr><th>S. No.</th><th>Product/Service</th><th>NIC Code</th><th>% of total Turnover contributed</th></tr></thead>
+ <tbody>
+ {% for product in products_sold %}
+ <tr>
+ <td>{{ default(product.s_no, loop.index1) }}</td>
+ <td>{{ default(product.name, default(product.product_name, "&lt;Not provided&gt;")) }}</td>
+ <td>{{ default(product.nic_code, "&lt;Not provided&gt;") }}</td>
+ <td class="text-right num">{{ default(product.turnover_percentage, default(product.turnover_pct, "&lt;Not provided&gt;")) }}</td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+
+ <h3>III. Operations</h3>
+ <p>18. Number of locations where plants and/or operations/offices of the entity are situated:</p>
+ <table>
+ <thead><tr><th>Location</th><th>Number of plants</th><th>Number of offices</th><th>Total</th></tr></thead>
+ <tbody>
+ <tr><td>National</td><td class="num">{{ default(national_plants, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(national_offices, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(national_total, "&lt;Not provided&gt;") }}</td></tr>
+ <tr><td>International</td><td class="num">{{ default(international_plants, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(international_offices, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(international_total, "&lt;Not provided&gt;") }}</td></tr>
+ </tbody>
+ </table>
+
+ <p>19. Markets served by the entity:</p>
+ <p><strong>a. Number of locations</strong></p>
+ <table>
+ <thead><tr><th>Locations</th><th>Number</th></tr></thead>
+ <tbody>
+ <tr><td>National (No. of States)</td><td class="num">{{ default(markets_national_states, "&lt;Not provided&gt;") }}</td></tr>
+ <tr><td>International (No. of Countries)</td><td class="num">{{ default(markets_international_countries, "&lt;Not provided&gt;") }}</td></tr>
+ </tbody>
+ </table>
+ <table>
+ <tbody>
+ <tr><td width="55%"><strong>b.</strong> Contribution of exports as a % of total turnover</td><td class="num">{{ default(export_contribution_pct, "&lt;Not provided&gt;") }}%</td></tr>
+ </tbody>
+ </table>
+ <p><strong>c. A brief on types of customers</strong></p>
+ <blockquote class="narrative">{{ default(customer_types, "&lt;Not provided&gt;") }}</blockquote>
+
+ <div class="page-break"></div>
+
+ <h3>IV. Employees</h3>
+ <div class="guidance-note">
+ <strong>Guidance:</strong> The term "Employee" is defined under Sec 2(1) of the Industrial Relations Code, 2020.
+ The entity should provide details as at the end of the reporting period.
+ </div>
+ <p>20. Details as at the end of Financial Year:</p>
+ <p><strong>a. Employees and workers (including differently abled):</strong></p>
+ <table>
+ <thead>
+ <tr>
+ <th rowspan="2">S. No.</th><th rowspan="2">Particulars</th><th rowspan="2">Total (A)</th>
+ <th colspan="2" class="text-center">Male</th><th colspan="2" class="text-center">Female</th>
+ </tr>
+ <tr><th>No. (B)</th><th>% (B/A)</th><th>No. (C)</th><th>% (C/A)</th></tr>
+ </thead>
+ <tbody>
+ <tr><td colspan="7" class="row-group">EMPLOYEES</td></tr>
+ <tr>
+ <td>1.</td><td>Permanent (D)</td><td class="num">{{ default(emp_perm_total, "&lt;Not provided&gt;") }}</td>
+ <td class="num">{{ default(emp_perm_male_no, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(emp_perm_male_pct, "&lt;Not provided&gt;") }}%</td>
+ <td class="num">{{ default(emp_perm_female_no, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(emp_perm_female_pct, "&lt;Not provided&gt;") }}%</td>
+ </tr>
+ <tr>
+ <td>2.</td><td>Other than Permanent (E)</td><td class="num">{{ default(emp_other_total, "&lt;Not provided&gt;") }}</td>
+ <td class="num">{{ default(emp_other_male_no, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(emp_other_male_pct, "&lt;Not provided&gt;") }}%</td>
+ <td class="num">{{ default(emp_other_female_no, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(emp_other_female_pct, "&lt;Not provided&gt;") }}%</td>
+ </tr>
+ <tr>
+ <td>3.</td><td><strong>Total employees (D+E)</strong></td><td class="num"><strong>{{ default(emp_total_total, "&lt;Not provided&gt;") }}</strong></td>
+ <td class="num"><strong>{{ default(emp_total_male_no, "&lt;Not provided&gt;") }}</strong></td><td class="num"><strong>{{ default(emp_total_male_pct, "&lt;Not provided&gt;") }}%</strong></td>
+ <td class="num"><strong>{{ default(emp_total_female_no, "&lt;Not provided&gt;") }}</strong></td><td class="num"><strong>{{ default(emp_total_female_pct, "&lt;Not provided&gt;") }}%</strong></td>
+ </tr>
+ <tr><td colspan="7" class="row-group">WORKERS</td></tr>
+ <tr>
+ <td>4.</td><td>Permanent (F)</td><td class="num">{{ default(wrk_perm_total, "&lt;Not provided&gt;") }}</td>
+ <td class="num">{{ default(wrk_perm_male_no, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(wrk_perm_male_pct, "&lt;Not provided&gt;") }}%</td>
+ <td class="num">{{ default(wrk_perm_female_no, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(wrk_perm_female_pct, "&lt;Not provided&gt;") }}%</td>
+ </tr>
+ <tr>
+ <td>5.</td><td>Other than Permanent (G)</td><td class="num">{{ default(wrk_other_total, "&lt;Not provided&gt;") }}</td>
+ <td class="num">{{ default(wrk_other_male_no, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(wrk_other_male_pct, "&lt;Not provided&gt;") }}%</td>
+ <td class="num">{{ default(wrk_other_female_no, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(wrk_other_female_pct, "&lt;Not provided&gt;") }}%</td>
+ </tr>
+ <tr>
+ <td>6.</td><td><strong>Total workers (F+G)</strong></td><td class="num"><strong>{{ default(wrk_total_total, "&lt;Not provided&gt;") }}</strong></td>
+ <td class="num"><strong>{{ default(wrk_total_male_no, "&lt;Not provided&gt;") }}</strong></td><td class="num"><strong>{{ default(wrk_total_male_pct, "&lt;Not provided&gt;") }}%</strong></td>
+ <td class="num"><strong>{{ default(wrk_total_female_no, "&lt;Not provided&gt;") }}</strong></td><td class="num"><strong>{{ default(wrk_total_female_pct, "&lt;Not provided&gt;") }}%</strong></td>
+ </tr>
+ </tbody>
+ </table>
+
+ <p><strong>b. Differently abled Employees and workers:</strong></p>
+ <table>
+ <thead>
+ <tr>
+ <th rowspan="2">S. No.</th><th rowspan="2">Particulars</th><th rowspan="2">Total (A)</th>
+ <th colspan="2" class="text-center">Male</th><th colspan="2" class="text-center">Female</th>
+ </tr>
+ <tr><th>No. (B)</th><th>% (B/A)</th><th>No. (C)</th><th>% (C/A)</th></tr>
+ </thead>
+ <tbody>
+ <tr><td colspan="7" class="row-group">DIFFERENTLY ABLED EMPLOYEES</td></tr>
+ <tr>
+ <td>1.</td><td>Permanent (D)</td><td class="num">{{ default(da_emp_perm_total, "&lt;Not provided&gt;") }}</td>
+ <td class="num">{{ default(da_emp_perm_male_no, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(da_emp_perm_male_pct, "&lt;Not provided&gt;") }}%</td>
+ <td class="num">{{ default(da_emp_perm_female_no, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(da_emp_perm_female_pct, "&lt;Not provided&gt;") }}%</td>
+ </tr>
+ <tr>
+ <td>2.</td><td>Other than Permanent (E)</td><td class="num">{{ default(da_emp_other_total, "&lt;Not provided&gt;") }}</td>
+ <td class="num">{{ default(da_emp_other_male_no, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(da_emp_other_male_pct, "&lt;Not provided&gt;") }}%</td>
+ <td class="num">{{ default(da_emp_other_female_no, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(da_emp_other_female_pct, "&lt;Not provided&gt;") }}%</td>
+ </tr>
+ <tr>
+ <td>3.</td><td><strong>Total DA employees (D+E)</strong></td><td class="num"><strong>{{ default(da_emp_total, "&lt;Not provided&gt;") }}</strong></td>
+ <td class="num"><strong>{{ default(da_emp_male_no, "&lt;Not provided&gt;") }}</strong></td><td class="num"><strong>{{ default(da_emp_male_pct, "&lt;Not provided&gt;") }}%</strong></td>
+ <td class="num"><strong>{{ default(da_emp_female_no, "&lt;Not provided&gt;") }}</strong></td><td class="num"><strong>{{ default(da_emp_female_pct, "&lt;Not provided&gt;") }}%</strong></td>
+ </tr>
+ <tr><td colspan="7" class="row-group">DIFFERENTLY ABLED WORKERS</td></tr>
+ <tr>
+ <td>4.</td><td>Permanent (F)</td><td class="num">{{ default(da_wrk_perm_total, "&lt;Not provided&gt;") }}</td>
+ <td class="num">{{ default(da_wrk_perm_male_no, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(da_wrk_perm_male_pct, "&lt;Not provided&gt;") }}%</td>
+ <td class="num">{{ default(da_wrk_perm_female_no, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(da_wrk_perm_female_pct, "&lt;Not provided&gt;") }}%</td>
+ </tr>
+ <tr>
+ <td>5.</td><td>Other than Permanent (G)</td><td class="num">{{ default(da_wrk_other_total, "&lt;Not provided&gt;") }}</td>
+ <td class="num">{{ default(da_wrk_other_male_no, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(da_wrk_other_male_pct, "&lt;Not provided&gt;") }}%</td>
+ <td class="num">{{ default(da_wrk_other_female_no, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(da_wrk_other_female_pct, "&lt;Not provided&gt;") }}%</td>
+ </tr>
+ <tr>
+ <td>6.</td><td><strong>Total DA workers (F+G)</strong></td><td class="num"><strong>{{ default(da_wrk_total, "&lt;Not provided&gt;") }}</strong></td>
+ <td class="num"><strong>{{ default(da_wrk_male_no, "&lt;Not provided&gt;") }}</strong></td><td class="num"><strong>{{ default(da_wrk_male_pct, "&lt;Not provided&gt;") }}%</strong></td>
+ <td class="num"><strong>{{ default(da_wrk_female_no, "&lt;Not provided&gt;") }}</strong></td><td class="num"><strong>{{ default(da_wrk_female_pct, "&lt;Not provided&gt;") }}%</strong></td>
+ </tr>
+ </tbody>
+ </table>
+
+ <p>21. Participation/Inclusion/Representation of women:</p>
+ <table>
+ <thead><tr><th></th><th>Total (A)</th><th>No. of Females (B)</th><th>% (B/A)</th></tr></thead>
+ <tbody>
+ <tr><td>Board of Directors</td><td class="num">{{ default(board_total, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(board_female_no, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(board_female_pct, "&lt;Not provided&gt;") }}%</td></tr>
+ <tr><td>Key Management Personnel</td><td class="num">{{ default(kmp_total, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(kmp_female_no, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(kmp_female_pct, "&lt;Not provided&gt;") }}%</td></tr>
+ </tbody>
+ </table>
+
+ <!-- Chart 5: Employee/Worker Gender Diversity -->
+ <div class="chart-card">
+ <h4>Chart: Employee &amp; Worker Gender Diversity</h4>
+ <div class="chart-subtitle">Headcount by gender, current financial year</div>
+ <div class="chart-canvas-wrap short"><canvas id="chartGenderDiversity"></canvas></div>
+ <details class="chart-table-toggle"><summary>View underlying data table</summary>
+ <table class="chart-data-table">
+ <thead><tr><th>Category</th><th>Male</th><th>Female</th></tr></thead>
+ <tbody>
+ <tr><td>Employees</td><td class="num">{{ default(emp_total_male_no, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(emp_total_female_no, "&lt;Not provided&gt;") }}</td></tr>
+ <tr><td>Workers</td><td class="num">{{ default(wrk_total_male_no, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(wrk_total_female_no, "&lt;Not provided&gt;") }}</td></tr>
+ </tbody>
+ </table>
+ </details>
+ </div>
+
+ <p>22. Turnover rate for permanent employees and workers (3-year trend):</p>
+ <table>
+ <thead>
+ <tr><th rowspan="2">Category</th>
+ <th colspan="3" class="text-center">FY {{ default(current_fy, "&lt;Not provided&gt;") }} (Current)</th>
+ <th colspan="3" class="text-center">FY {{ default(previous_fy, "&lt;Not provided&gt;") }} (Previous)</th>
+ <th colspan="3" class="text-center">FY {{ default(prior_to_previous_fy, "&lt;Not provided&gt;") }} (Prior to Previous)</th>
+ </tr>
+ <tr><th>Male</th><th>Female</th><th>Total</th><th>Male</th><th>Female</th><th>Total</th><th>Male</th><th>Female</th><th>Total</th></tr>
+ </thead>
+ <tbody>
+ {% for rate in turnover_rates %}
+ <tr>
+ <td>{{ default(rate.category, "&lt;Not provided&gt;") }}</td>
+ <td class="num">{{ default(rate.male_current, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(rate.female_current, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(rate.total_current, "&lt;Not provided&gt;") }}</td>
+ <td class="num">{{ default(rate.male_prev, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(rate.female_prev, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(rate.total_prev, "&lt;Not provided&gt;") }}</td>
+ <td class="num">{{ default(rate.male_prior_prev, "N/A") }}</td><td class="num">{{ default(rate.female_prior_prev, "N/A") }}</td><td class="num">{{ default(rate.total_prior_prev, "N/A") }}</td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+
+ <div class="page-break"></div>
+
+ <h3>V. Holding, Subsidiary and Associate Companies (including joint ventures)</h3>
+ <p>23. Names of holding / subsidiary / associate companies / joint ventures:</p>
+ <table>
+ <thead><tr><th>S. No.</th><th>Name</th><th>Type (Holding/Subsidiary/Associate/JV)</th><th>% shares held by listed entity</th><th>Participates in BR initiatives? (Yes/No)</th></tr></thead>
+ <tbody>
+ {% for sub in subsidiaries %}
+ <tr>
+ <td>{{ loop.index }}</td>
+ <td>{{ default(sub.name, "&lt;Not provided&gt;") }}</td>
+ <td>{{ default(sub.type, "&lt;Not provided&gt;") }}</td>
+ <td class="text-right num">{{ default(sub.shares_held_pct, "&lt;Not provided&gt;") }}%</td>
+ <td class="text-center">{{ default(sub.br_participation, "&lt;Not provided&gt;") }}</td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+
+ <h3>VI. CSR Details</h3>
+ <p>24. CSR applicability and spend:</p>
+ <table>
+ <tbody>
+ <tr><td width="55%">(i) Whether CSR is applicable as per Section 135 of the Companies Act, 2013 (Yes/No)</td><td>{{ default(csr_applicable, "&lt;Not provided&gt;") }}</td></tr>
+ <tr><td>(ii) Turnover (₹ Cr)</td><td class="num">{{ default(csr_turnover_amount, "&lt;Not provided&gt;") }}</td></tr>
+ <tr><td>(iii) Net worth (₹ Cr)</td><td class="num">{{ default(csr_net_worth, "&lt;Not provided&gt;") }}</td></tr>
+ <tr><td>CSR obligation amount (₹ Cr)</td><td class="num">{{ default(csr_obligation_amount, "&lt;Not provided&gt;") }}</td></tr>
+ <tr><td>CSR amount spent (₹ Cr)</td><td class="num">{{ default(csr_spent_amount, "&lt;Not provided&gt;") }}</td></tr>
+ <tr><td>CSR unspent amount (₹ Cr)</td><td class="num">{{ default(csr_unspent_amount, "&lt;Not provided&gt;") }}</td></tr>
+ </tbody>
+ </table>
+
+ <!-- Chart 6: CSR Spend vs Obligation (grouped bar - same scale, single axis; dual-axis combo rejected per dataviz) -->
+ <div class="chart-card">
+ <h4>Chart: CSR Obligation vs. Actual Spend</h4>
+ <div class="chart-subtitle">₹ Crore, current financial year</div>
+ <div class="chart-canvas-wrap short"><canvas id="chartCsrSpend"></canvas></div>
+ <details class="chart-table-toggle"><summary>View underlying data table</summary>
+ <table class="chart-data-table">
+ <thead><tr><th>Metric</th><th>₹ Cr</th></tr></thead>
+ <tbody>
+ <tr><td>CSR Obligation</td><td class="num">{{ default(csr_obligation_amount, "&lt;Not provided&gt;") }}</td></tr>
+ <tr><td>CSR Spent</td><td class="num">{{ default(csr_spent_amount, "&lt;Not provided&gt;") }}</td></tr>
+ </tbody>
+ </table>
+ </details>
+ </div>
+
+ <p>CSR Projects undertaken:</p>
+ <table>
+ <thead><tr><th>S. No.</th><th>Project Name</th><th>Amount Spent (₹ Cr)</th><th>Location</th></tr></thead>
+ <tbody>
+ {% for proj in csr_projects %}
+ <tr>
+ <td>{{ loop.index }}</td>
+ <td>{{ default(proj.project_name, "&lt;Not provided&gt;") }}</td>
+ <td class="num">{{ default(proj.amount_spent, "&lt;Not provided&gt;") }}</td>
+ <td>{{ default(proj.location, "&lt;Not provided&gt;") }}</td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+
+ <div class="page-break"></div>
+
+ <h3>VII. Transparency and Disclosures Compliances</h3>
+ <p>25. Complaints/Grievances on any of the principles (Principles 1 to 9) under the NGRBC:</p>
+ <table>
+ <thead>
+ <tr><th rowspan="2">Stakeholder Group</th><th rowspan="2">Grievance Redressal Mechanism in Place (Yes/No)</th>
+ <th colspan="3" class="text-center">FY {{ default(current_fy, "&lt;Not provided&gt;") }} (Current)</th>
+ <th colspan="3" class="text-center">FY {{ default(previous_fy, "&lt;Not provided&gt;") }} (Previous)</th>
+ </tr>
+ <tr><th>Filed</th><th>Pending at close</th><th>Remarks</th><th>Filed</th><th>Pending at close</th><th>Remarks</th></tr>
+ </thead>
+ <tbody>
+ {% for g in stakeholder_grievances %}
+ <tr>
+ <td>{{ default(g.stakeholder_group, "&lt;Not provided&gt;") }}</td>
+ <td class="text-center">{{ default(g.mechanism_in_place, "&lt;Not provided&gt;") }}</td>
+ <td class="num">{{ default(g.filed_current, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(g.pending_current, "&lt;Not provided&gt;") }}</td><td>{{ default(g.remarks_current, "&lt;Not provided&gt;") }}</td>
+ <td class="num">{{ default(g.filed_prev, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(g.pending_prev, "&lt;Not provided&gt;") }}</td><td>{{ default(g.remarks_prev, "&lt;Not provided&gt;") }}</td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+
+ <p>Complaints/Grievances on Principles 1–9 - Penalties, fines, and settlement details:</p>
+ <h5>Monetary</h5>
+ <table>
+ <thead><tr><th>NGRBC Principle</th><th>Regulatory/enforcement/judicial institution</th><th>Amount (₹)</th><th>Brief of the case</th><th>Appeal preferred? (Yes/No)</th></tr></thead>
+ <tbody>
+ {% for pen in penalties %}
+ <tr>
+ <td>{{ default(pen.principle, "&lt;Not provided&gt;") }}</td>
+ <td>{{ default(pen.stakeholder, pen.court_tribunal) }}</td>
+ <td class="num">{{ default(pen.amount, "&lt;Not provided&gt;") }}</td>
+ <td>{{ default(pen.brief_case, "&lt;Not provided&gt;") }}</td>
+ <td class="text-center">{{ default(pen.has_appeal, "&lt;Not provided&gt;") }}</td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+
+ <p>26. Overview of the entity's material responsible business conduct issues:</p>
+ <table>
+ <thead><tr><th>S. No.</th><th>Material Issue Identified</th><th>Risk / Opportunity</th><th>Rationale</th><th>Approach to Adapt / Mitigate</th><th>Financial Implications</th></tr></thead>
+ <tbody>
+ {% for issue in material_issues %}
+ <tr>
+ <td>{{ loop.index }}</td>
+ <td>{{ default(issue.issue_name, "&lt;Not provided&gt;") }}</td>
+ <td class="text-center">{{ default(issue.risk_or_opportunity, "&lt;Not provided&gt;") }}</td>
+ <td>{{ default(issue.rationale, "&lt;Not provided&gt;") }}</td>
+ <td>{{ default(issue.mitigation_approach, "&lt;Not provided&gt;") }}</td>
+ <td>{{ default(issue.financial_implications, "&lt;Not provided&gt;") }}</td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+
+ <p>ESG rating/assessment:</p>
+ <table>
+ <tbody>
+ <tr><td width="55%">ESG assessment done (Yes/No)</td><td>{{ default(esg_assessment_done, "&lt;Not provided&gt;") }}</td></tr>
+ <tr><td>ESG assessment agency</td><td>{{ default(esg_assessment_agency, "&lt;Not provided&gt;") }}</td></tr>
+ <tr><td>ESG assessment scope</td><td>{{ default(esg_assessment_scope, "&lt;Not provided&gt;") }}</td></tr>
+ </tbody>
+ </table>
+ </div>
+
+ <!-- ================================================================
+ SECTION B: MANAGEMENT & PROCESS DISCLOSURES
+ ================================================================ -->
+ <div class="section viz-root" id="section-b">
+ <img class="section-divider-img" loading="lazy" onerror="this.style.visibility='hidden'" alt="Business leaders in a policy discussion, representing governance and management processes"
+ src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=1200&q=60&auto=format&fit=crop">
+ <h2>SECTION B: MANAGEMENT AND PROCESS DISCLOSURES</h2>
+ <p class="section-intro">This section is aimed at helping businesses demonstrate the structures, policies
+ and processes put in place towards adopting the NGRBC Principles and Core Elements.</p>
+
+ <h3>Policy and Management Processes</h3>
+ <p>1. A statement by the director responsible for the business responsibility report, highlighting ESG
+ related challenges, targets and achievements:</p>
+ <blockquote class="narrative">{{ default(director_esg_statement, "&lt;Not provided&gt;") }}</blockquote>
+
+ <p>2. Details of the highest authority responsible for implementation and oversight of the Business
+ Responsibility policy(ies):</p>
+ <blockquote class="narrative">{{ default(highest_authority_details, "&lt;Not provided&gt;") }}</blockquote>
+
+ <p>3. Does the entity have a specified Committee of the Board/Director responsible for decision making on
+ sustainability related issues?</p>
+ <table>
+ <tbody>
+ <tr><td width="30%">Committee/Director</td><td>{{ default(sustainability_committee_details, "&lt;Not provided&gt;") }}</td></tr>
+ </tbody>
+ </table>
+
+ <p>4. Policy and management processes - for each of the 9 Principles:</p>
+ <table>
+ <thead>
+ <tr><th>Disclosure Questions</th>
+ {% for p in range(1, 10) %}<th class="text-center">P{{ p }}</th>{% endfor %}
+ </tr>
+ </thead>
+ <tbody>
+ <tr><td colspan="10" class="row-group">Policy &amp; Management Processes</td></tr>
+ <tr>
+ <td>a. Whether your entity's policy/policies cover each principle and its core elements of the NGRBCs</td>
+ {% for p in principle_policy_matrix %}<td class="text-center">{{ default(p.covers_principle, "&lt;Not provided&gt;") }}</td>{% endfor %}
+ </tr>
+ <tr>
+ <td>b. Has the policy been approved by the Board?</td>
+ {% for p in principle_policy_matrix %}<td class="text-center">{{ default(p.board_approved, "&lt;Not provided&gt;") }}</td>{% endfor %}
+ </tr>
+ <tr>
+ <td>c. Web-link of the policies, if available</td>
+ {% for p in principle_policy_matrix %}<td class="text-center">{{ default(p.web_link, "&lt;Not provided&gt;") }}</td>{% endfor %}
+ </tr>
+ <tr>
+ <td>d. Whether the entity has translated the policy into procedures</td>
+ {% for p in principle_policy_matrix %}<td class="text-center">{{ default(p.translated_to_procedures, "&lt;Not provided&gt;") }}</td>{% endfor %}
+ </tr>
+ <tr>
+ <td>e. Do the enlisted policies extend to your value chain partners?</td>
+ {% for p in principle_policy_matrix %}<td class="text-center">{{ default(p.extends_to_value_chain, "&lt;Not provided&gt;") }}</td>{% endfor %}
+ </tr>
+ <tr>
+ <td>f. Name of the national and international codes/certifications/labels/standards adopted and mapped to each principle</td>
+ {% for p in principle_policy_matrix %}<td class="text-center">{{ default(p.standards_mapped, "&lt;Not provided&gt;") }}</td>{% endfor %}
+ </tr>
+ <tr>
+ <td>g. Specific commitments, goals and targets set by the entity with defined timelines</td>
+ {% for p in principle_policy_matrix %}<td class="text-center">{{ default(p.commitments_targets, "&lt;Not provided&gt;") }}</td>{% endfor %}
+ </tr>
+ <tr>
+ <td>h. Performance of the entity against the specific commitments, goals and targets</td>
+ {% for p in principle_policy_matrix %}<td class="text-center">{{ default(p.performance_against_targets, "&lt;Not provided&gt;") }}</td>{% endfor %}
+ </tr>
+ </tbody>
+ </table>
+
+ <p>5. Governance, leadership and oversight - statement by the highest authority responsible for the
+ business responsibility report on the entity's performance against NGRBC:</p>
+ <blockquote class="narrative">{{ default(governance_oversight_statement, "&lt;Not provided&gt;") }}</blockquote>
+
+ <p>6. Does the entity have a specified committee responsible for decision-making on sustainability
+ related issues? (Yes/No). If yes, provide details:</p>
+ <blockquote class="narrative">{{ default(sustainability_decision_committee_details, "&lt;Not provided&gt;") }}</blockquote>
+
+ <div class="page-break"></div>
+
+ <p>7. Details of Review of NGRBCs by the Company:</p>
+ <table>
+ <thead>
+ <tr><th rowspan="2">Subject for Review</th>
+ <th colspan="2" class="text-center">Indicate whether review was undertaken by Director / Committee of the Board / Any other Committee</th>
+ <th colspan="2" class="text-center">Frequency (Annually / Half yearly / Quarterly / Any other, please specify)</th>
+ </tr>
+ <tr>{% for p in range(1,10) %}<th class="text-center">P{{ p }}</th>{% endfor %}
+ </tr>
+ </thead>
+ <tbody>
+ <tr>
+ <td>Performance against above policies and follow-up action</td>
+ {% for p in review_by_committee %}<td class="text-center">{{ default(p.review_performed, "&lt;Not provided&gt;") }}</td>{% endfor %}
+ </tr>
+ <tr>
+ <td>Compliance with statutory requirements of relevance to the principles, and rectification of any non-compliances</td>
+ {% for p in review_by_committee %}<td class="text-center">{{ default(p.frequency, "&lt;Not provided&gt;") }}</td>{% endfor %}
+ </tr>
+ </tbody>
+ </table>
+
+ <p>8. Has the entity carried out independent assessment/evaluation of the working of its policies by an
+ external agency? (Yes/No. If yes, provide name of the agency):</p>
+ <table>
+ <thead><tr><th>Principle</th><th>Independently Assessed (Yes/No)</th><th>Assessing Agency</th></tr></thead>
+ <tbody>
+ {% for p in external_assessment %}
+ <tr>
+ <td>P{{ loop.index }}: {{ default(p.principle_name, "") }}</td>
+ <td class="text-center">{{ default(p.assessed, "&lt;Not provided&gt;") }}</td>
+ <td>{{ default(p.agency, "&lt;Not provided&gt;") }}</td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+
+ <p>9. If answer to question 4(a) above is "No" i.e. not all Principles are covered by a policy, reasons to
+ be stated:</p>
+ <table>
+ <thead><tr><th>Question</th>{% for p in range(1,10) %}<th class="text-center">P{{ p }}</th>{% endfor %}</tr></thead>
+ <tbody>
+ <tr>
+ <td>The entity does not consider the Principles material to its business (Yes/No)</td>
+ {% for p in gap_reasons %}<td class="text-center">{{ default(p.not_material, "&lt;Not provided&gt;") }}</td>{% endfor %}
+ </tr>
+ <tr>
+ <td>The entity is not at a stage where it is in a position to formulate and implement the policies on specified principles (Yes/No)</td>
+ {% for p in gap_reasons %}<td class="text-center">{{ default(p.not_ready, "&lt;Not provided&gt;") }}</td>{% endfor %}
+ </tr>
+ <tr>
+ <td>The entity does not have the financial or/human and technical resources available for the task (Yes/No)</td>
+ {% for p in gap_reasons %}<td class="text-center">{{ default(p.no_resources, "&lt;Not provided&gt;") }}</td>{% endfor %}
+ </tr>
+ <tr>
+ <td>It is planned to be done in the next financial year (Yes/No)</td>
+ {% for p in gap_reasons %}<td class="text-center">{{ default(p.planned_next_fy, "&lt;Not provided&gt;") }}</td>{% endfor %}
+ </tr>
+ <tr>
+ <td>Any other reason (please specify)</td>
+ {% for p in gap_reasons %}<td class="text-center">{{ default(p.other_reason, "N/A") }}</td>{% endfor %}
+ </tr>
+ </tbody>
+ </table>
+ </div>
+
+ <!-- ================================================================
+ SECTION C: PRINCIPLE-WISE PERFORMANCE DISCLOSURES
+ ================================================================ -->
+ <div class="section viz-root" id="section-c">
+ <h2>SECTION C: PRINCIPLE-WISE PERFORMANCE DISCLOSURE</h2>
+ <p class="section-intro">This section is aimed at helping entities demonstrate their performance in
+ integrating the Principles and Core Elements of the NGRBCs into their business practices.</p>
+
+ <!-- ============================= PRINCIPLE 1 ============================= -->
+ <div class="principle-band"><img class="band-img" loading="lazy" onerror="this.style.visibility='hidden'" alt="Handshake symbolizing ethics, transparency and accountability" src="https://images.unsplash.com/photo-1521791136064-7986c2920216?w=300&q=60&auto=format&fit=crop"><span class="band-text"><span class="principle-no">Principle 1</span><span class="principle-title">Businesses should conduct and govern themselves with Integrity, and in a Manner that is Ethical, Transparent and Accountable</span></span></div>
+
+ <h4><span class="indicator-label indicator-essential">Essential</span> Indicators</h4>
+ <p>1. Percentage coverage by training and awareness programmes on Principle 1:</p>
+ <table>
+ <thead><tr><th>Segment</th><th>Total number of training and awareness programmes held</th><th>Topics / principles covered</th><th>% of persons covered</th></tr></thead>
+ <tbody>
+ {% for t in p1_training %}
+ <tr><td>{{ default(t.segment, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(t.programmes_held, "&lt;Not provided&gt;") }}</td><td>{{ default(t.topics_covered, "&lt;Not provided&gt;") }}</td><td class="text-right num">{{ default(t.pct_covered, "&lt;Not provided&gt;") }}%</td></tr>
+ {% endfor %}
+ </tbody>
+ </table>
+
+ <p>2. Details of fines/penalties/punishment/award/compounding fees/settlement (monetary and non-monetary)
+ imposed on the entity/Directors/KMPs, by regulators/law enforcement agencies/judicial institutions:</p>
+ <table>
+ <thead><tr><th>Case</th><th>Name of regulatory/enforcement agency/judicial institution</th><th>Amount (₹)</th><th>Brief of the case</th><th>Appeal preferred? (Yes/No)</th></tr></thead>
+ <tbody>
+ {% for f in p1_fines %}
+ <tr><td>{{ default(f.case_name, "&lt;Not provided&gt;") }}</td><td>{{ default(f.authority, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(f.amount, "&lt;Not provided&gt;") }}</td><td>{{ default(f.brief_case, "&lt;Not provided&gt;") }}</td><td class="text-center">{{ default(f.appeal_preferred, "&lt;Not provided&gt;") }}</td></tr>
+ {% endfor %}
+ </tbody>
+ </table>
+
+ <p>3. Number of days of accounts payable:</p>
+ <table>
+ <tbody><tr><td width="55%">Number of days of accounts payables ((Accounts payable *365) / Cost of goods/services procured)</td><td class="num">{{ default(p1_accounts_payable_days, "&lt;Not provided&gt;") }}</td></tr></tbody>
+ </table>
+
+ <p>4. Open -ness of business - concentration of purchases and sales with trading houses, dealers, related parties:</p>
+ <table>
+ <thead><tr><th>Parameter</th><th>Metrics</th><th>Value (Current FY)</th><th>Value (Previous FY)</th></tr></thead>
+ <tbody>
+ {% for c in p1_concentration %}
+ <tr><td>{{ default(c.parameter, "&lt;Not provided&gt;") }}</td><td>{{ default(c.metric, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(c.current_value, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(c.previous_value, "&lt;Not provided&gt;") }}</td></tr>
+ {% endfor %}
+ </tbody>
+ </table>
+
+ <h4><span class="indicator-label indicator-leadership">Leadership</span> Indicators</h4>
+ <p>1. Awareness programmes conducted for value chain partners on anti-corruption/anti-bribery:</p>
+ <blockquote class="narrative">{{ default(p1_value_chain_awareness, "&lt;Not provided&gt;") }}</blockquote>
+ <p>2. Processes in place to avoid/manage conflict of interests involving members of the Board:</p>
+ <blockquote class="narrative">{{ default(p1_conflict_of_interest_process, "&lt;Not provided&gt;") }}</blockquote>
+
+ <div class="page-break"></div>
+
+ <!-- ============================= PRINCIPLE 2 ============================= -->
+ <div class="principle-band"><img class="band-img" loading="lazy" onerror="this.style.visibility='hidden'" alt="Sustainable manufacturing line producing safe goods" src="https://images.unsplash.com/photo-1581094288338-2314dddb7ece?w=300&q=60&auto=format&fit=crop"><span class="band-text"><span class="principle-no">Principle 2</span><span class="principle-title">Businesses should provide goods and services in a Manner that is Sustainable and Safe</span></span></div>
+
+ <h4><span class="indicator-label indicator-essential">Essential</span> Indicators</h4>
+ <p>1. R&amp;D and capital expenditure investments in specific technologies to improve environmental and
+ social impacts of products/services:</p>
+ <table>
+ <thead><tr><th></th><th>% of R&amp;D / Capex investments (Current FY)</th><th>% of R&amp;D / Capex investments (Previous FY)</th><th>Details of improvements</th></tr></thead>
+ <tbody>
+ <tr><td>R&amp;D</td><td class="num">{{ default(p2_rd_pct_current, "&lt;Not provided&gt;") }}%</td><td class="num">{{ default(p2_rd_pct_prev, "&lt;Not provided&gt;") }}%</td><td>{{ default(p2_rd_improvements, "&lt;Not provided&gt;") }}</td></tr>
+ <tr><td>Capex</td><td class="num">{{ default(p2_capex_pct_current, "&lt;Not provided&gt;") }}%</td><td class="num">{{ default(p2_capex_pct_prev, "&lt;Not provided&gt;") }}%</td><td>{{ default(p2_capex_improvements, "&lt;Not provided&gt;") }}</td></tr>
+ </tbody>
+ </table>
+
+ <p>2. Sustainable sourcing:</p>
+ <table>
+ <tbody>
+ <tr><td width="55%">a. Does the entity have procedures in place for sustainable sourcing? (Yes/No)</td><td>{{ default(p2_sustainable_sourcing_process, "&lt;Not provided&gt;") }}</td></tr>
+ <tr><td>b. % of inputs sourced sustainably</td><td class="num">{{ default(p2_sustainable_sourcing_pct, "&lt;Not provided&gt;") }}%</td></tr>
+ </tbody>
+ </table>
+
+ <p>3. Describe the processes in place to safely reclaim products for reusing, recycling and disposing at
+ the end of life:</p>
+ <table>
+ <thead><tr><th>Product/Service category</th><th>Reclaimed (%)</th><th>Reused / Recycled / Safely disposed</th></tr></thead>
+ <tbody>
+ {% for r in p2_reclaim %}
+ <tr><td>{{ default(r.category, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(r.reclaimed_pct, "&lt;Not provided&gt;") }}%</td><td>{{ default(r.process_description, "&lt;Not provided&gt;") }}</td></tr>
+ {% endfor %}
+ </tbody>
+ </table>
+
+ <p>4. Whether Extended Producer Responsibility (EPR) is applicable; if yes, whether collection plan
+ submitted:</p>
+ <blockquote class="narrative">{{ default(p2_epr_status, "&lt;Not provided&gt;") }}</blockquote>
+
+ <h4><span class="indicator-label indicator-leadership">Leadership</span> Indicators</h4>
+ <p>1. Life Cycle Assessments conducted:</p>
+ <table>
+ <thead><tr><th>NIC Code</th><th>Product/Service</th><th>% of turnover</th><th>Boundary for which LCA conducted</th><th>Whether results publicly available</th></tr></thead>
+ <tbody>
+ {% for lca in p2_lca %}
+ <tr><td>{{ default(lca.nic_code, "&lt;Not provided&gt;") }}</td><td>{{ default(lca.product, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(lca.turnover_pct, "&lt;Not provided&gt;") }}%</td><td>{{ default(lca.boundary, "&lt;Not provided&gt;") }}</td><td class="text-center">{{ default(lca.publicly_available, "&lt;Not provided&gt;") }}</td></tr>
+ {% endfor %}
+ </tbody>
+ </table>
+ <p>2. Products/services with adverse environmental impact, actions taken to mitigate:</p>
+ <blockquote class="narrative">{{ default(p2_adverse_impact_mitigation, "&lt;Not provided&gt;") }}</blockquote>
+ <p>3. % of recycled/reused input material to total material (by value):</p>
+ <table>
+ <thead><tr><th>Indicate input material</th><th>Recycled/reused (%) - Current FY</th><th>Recycled/reused (%) - Previous FY</th></tr></thead>
+ <tbody>
+ {% for m in p2_recycled_input %}
+ <tr><td>{{ default(m.material, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(m.pct_current, "&lt;Not provided&gt;") }}%</td><td class="num">{{ default(m.pct_prev, "&lt;Not provided&gt;") }}%</td></tr>
+ {% endfor %}
+ </tbody>
+ </table>
+
+ <div class="page-break"></div>
+
+ <!-- ============================= PRINCIPLE 3 ============================= -->
+ <div class="principle-band"><img class="band-img" loading="lazy" onerror="this.style.visibility='hidden'" alt="Employees collaborating, representing workplace well-being" src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=300&q=60&auto=format&fit=crop"><span class="band-text"><span class="principle-no">Principle 3</span><span class="principle-title">Businesses should respect and promote the well-being of all Employees, including those in their Value Chains</span></span></div>
+
+ <h4><span class="indicator-label indicator-essential">Essential</span> Indicators</h4>
+ <p>1. Details of measures for the well-being of employees and workers (% covered by health insurance,
+ accident insurance, maternity benefits, paternity benefits, day care facilities):</p>
+ <table>
+ <thead>
+ <tr><th rowspan="2">Category</th><th rowspan="2">Total (A)</th>
+ <th colspan="3" class="text-center">Health Insurance</th><th colspan="3" class="text-center">Accident Insurance</th>
+ <th colspan="3" class="text-center">Maternity Benefits</th><th colspan="3" class="text-center">Paternity Benefits</th><th colspan="3" class="text-center">Day Care Facilities</th>
+ </tr>
+ <tr>{% for i in range(5) %}<th>Male</th><th>Female</th><th>%</th>{% endfor %}</tr>
+ </thead>
+ <tbody>
+ {% for w in p3_wellbeing %}
+ <tr>
+ <td>{{ default(w.category, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(w.total, "&lt;Not provided&gt;") }}</td>
+ <td class="num">{{ default(w.health_male, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(w.health_female, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(w.health_pct, "&lt;Not provided&gt;") }}%</td>
+ <td class="num">{{ default(w.accident_male, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(w.accident_female, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(w.accident_pct, "&lt;Not provided&gt;") }}%</td>
+ <td class="num">{{ default(w.maternity_male, "N/A") }}</td><td class="num">{{ default(w.maternity_female, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(w.maternity_pct, "&lt;Not provided&gt;") }}%</td>
+ <td class="num">{{ default(w.paternity_male, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(w.paternity_female, "N/A") }}</td><td class="num">{{ default(w.paternity_pct, "&lt;Not provided&gt;") }}%</td>
+ <td class="num">{{ default(w.daycare_male, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(w.daycare_female, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(w.daycare_pct, "&lt;Not provided&gt;") }}%</td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+
+ <p>2. Details of retirement benefits:</p>
+ <table>
+ <thead><tr><th rowspan="2">Benefits</th><th colspan="3" class="text-center">FY {{ default(current_fy, "&lt;Not provided&gt;") }} (Current)</th><th colspan="3" class="text-center">FY {{ default(previous_fy, "&lt;Not provided&gt;") }} (Previous)</th></tr>
+ <tr><th>No. of employees covered</th><th>No. of workers covered</th><th>Deducted and deposited with authority (Y/N/N.A.)</th><th>No. of employees covered</th><th>No. of workers covered</th><th>Deducted and deposited with authority (Y/N/N.A.)</th></tr>
+ </thead>
+ <tbody>
+ {% for b in p3_retirement_benefits %}
+ <tr>
+ <td>{{ default(b.benefit_name, "&lt;Not provided&gt;") }}</td>
+ <td class="num">{{ default(b.emp_covered_current, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(b.wrk_covered_current, "&lt;Not provided&gt;") }}</td><td class="text-center">{{ default(b.deposited_current, "&lt;Not provided&gt;") }}</td>
+ <td class="num">{{ default(b.emp_covered_prev, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(b.wrk_covered_prev, "&lt;Not provided&gt;") }}</td><td class="text-center">{{ default(b.deposited_prev, "&lt;Not provided&gt;") }}</td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+
+ <p>3. Accessibility of workplaces for differently abled employees and workers:</p>
+ <blockquote class="narrative">{{ default(p3_accessibility_details, "&lt;Not provided&gt;") }}</blockquote>
+
+ <p>4. Does the entity have an Equal Opportunity Policy as per the Rights of Persons with Disabilities Act, 2016?</p>
+ <blockquote class="narrative">{{ default(p3_equal_opportunity_policy, "&lt;Not provided&gt;") }}</blockquote>
+
+ <p>5. Return to work and Retention rates of permanent employees and workers that took parental leave:</p>
+ <table>
+ <thead><tr><th>Gender</th><th>Return to work rate</th><th>Retention rate</th></tr></thead>
+ <tbody>
+ {% for r in p3_parental_leave_retention %}
+ <tr><td>{{ default(r.gender, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(r.return_to_work_rate, "&lt;Not provided&gt;") }}%</td><td class="num">{{ default(r.retention_rate, "&lt;Not provided&gt;") }}%</td></tr>
+ {% endfor %}
+ </tbody>
+ </table>
+
+ <p>6. Grievance redressal mechanisms in place:</p>
+ <table>
+ <thead><tr><th>Category</th><th>Mechanism details</th></tr></thead>
+ <tbody>
+ {% for m in p3_grievance_mechanisms %}
+ <tr><td>{{ default(m.category, "&lt;Not provided&gt;") }}</td><td>{{ default(m.mechanism_details, "&lt;Not provided&gt;") }}</td></tr>
+ {% endfor %}
+ </tbody>
+ </table>
+
+ <p>7. Membership of employees and workers in Trade Unions/Associations:</p>
+ <table>
+ <thead><tr><th rowspan="2">Category</th><th rowspan="2">Total (A)</th><th colspan="2" class="text-center">Current FY</th><th colspan="2" class="text-center">Previous FY</th></tr>
+ <tr><th>No. (B)</th><th>% (B/A)</th><th>No. (C)</th><th>% (C/A)</th></tr>
+ </thead>
+ <tbody>
+ {% for u in p3_union_membership %}
+ <tr><td>{{ default(u.category, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(u.total, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(u.no_current, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(u.pct_current, "&lt;Not provided&gt;") }}%</td><td class="num">{{ default(u.no_prev, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(u.pct_prev, "&lt;Not provided&gt;") }}%</td></tr>
+ {% endfor %}
+ </tbody>
+ </table>
+
+ <p>8. Details of training on health and safety measures and skill upgradation:</p>
+ <table>
+ <thead><tr><th rowspan="2">Category</th><th colspan="3" class="text-center">On Health &amp; Safety Measures</th><th colspan="3" class="text-center">On Skill Upgradation</th></tr>
+ <tr><th>Total (A)</th><th>No. (B)</th><th>% (B/A)</th><th>Total (A)</th><th>No. (B)</th><th>% (B/A)</th></tr>
+ </thead>
+ <tbody>
+ {% for tr in p3_hs_training %}
+ <tr>
+ <td>{{ default(tr.category, "&lt;Not provided&gt;") }}</td>
+ <td class="num">{{ default(tr.hs_total, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(tr.hs_no, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(tr.hs_pct, "&lt;Not provided&gt;") }}%</td>
+ <td class="num">{{ default(tr.skill_total, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(tr.skill_no, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(tr.skill_pct, "&lt;Not provided&gt;") }}%</td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+
+ <p>9. Details of performance and career development reviews:</p>
+ <table>
+ <thead><tr><th rowspan="2">Category</th><th colspan="2" class="text-center">Current FY</th><th colspan="2" class="text-center">Previous FY</th></tr>
+ <tr><th>Total (A)</th><th>% covered (B/A)</th><th>Total (A)</th><th>% covered (B/A)</th></tr>
+ </thead>
+ <tbody>
+ {% for pr in p3_performance_reviews %}
+ <tr><td>{{ default(pr.category, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(pr.total_current, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(pr.pct_current, "&lt;Not provided&gt;") }}%</td><td class="num">{{ default(pr.total_prev, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(pr.pct_prev, "&lt;Not provided&gt;") }}%</td></tr>
+ {% endfor %}
+ </tbody>
+ </table>
+
+ <p>10. Health and safety management system:</p>
+ <table>
+ <tbody>
+ <tr><td width="55%">a. Whether an occupational health and safety management system has been implemented (Yes/No)</td><td>{{ default(p3_ohs_system_implemented, "&lt;Not provided&gt;") }}</td></tr>
+ <tr><td>b. What is the process used to identify work-related hazards and assess risks on a routine and non-routine basis</td><td>{{ default(p3_hazard_identification_process, "&lt;Not provided&gt;") }}</td></tr>
+ <tr><td>c. Whether you have processes for workers to report work-related hazards</td><td>{{ default(p3_hazard_reporting_process, "&lt;Not provided&gt;") }}</td></tr>
+ <tr><td>d. Do the employees/worker have access to non-occupational medical and healthcare services?</td><td>{{ default(p3_healthcare_access, "&lt;Not provided&gt;") }}</td></tr>
+ </tbody>
+ </table>
+
+ <p>11. Details of safety related incidents:</p>
+ <table>
+ <thead><tr><th>Safety Incident/Number</th><th>Category</th><th>Current FY</th><th>Previous FY</th></tr></thead>
+ <tbody>
+ {% for s in p3_safety_incidents %}
+ <tr><td>{{ default(s.metric_name, "&lt;Not provided&gt;") }}</td><td>{{ default(s.category, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(s.current_value, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(s.previous_value, "&lt;Not provided&gt;") }}</td></tr>
+ {% endfor %}
+ </tbody>
+ </table>
+
+ <!-- Chart: Safety incidents small-multiples (LTIFR / fatalities) -->
+ <div class="chart-card">
+ <h4>Chart: Safety Performance Rates (LTIFR &amp; Injury Rate)</h4>
+ <div class="chart-subtitle">Current vs. previous financial year (fatalities excluded - headcount, see table)</div>
+ <div class="chart-canvas-wrap short"><canvas id="chartSafety"></canvas></div>
+ <details class="chart-table-toggle"><summary>View underlying data table</summary>
+ <table class="chart-data-table">
+ <thead><tr><th>Metric</th><th>Category</th><th>Current FY</th><th>Previous FY</th></tr></thead>
+ <tbody>
+ {% for s in p3_safety_incidents %}
+ <tr><td>{{ default(s.metric_name, "&lt;Not provided&gt;") }}</td><td>{{ default(s.category, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(s.current_value, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(s.previous_value, "&lt;Not provided&gt;") }}</td></tr>
+ {% endfor %}
+ </tbody>
+ </table>
+ </details>
+ </div>
+
+ <p>12. Description of measures taken to ensure a safe and healthy work place:</p>
+ <blockquote class="narrative">{{ default(p3_safe_workplace_measures, "&lt;Not provided&gt;") }}</blockquote>
+
+ <p>13. Number of complaints on working conditions and health &amp; safety:</p>
+ <table>
+ <thead><tr><th></th><th colspan="2" class="text-center">Current FY</th><th colspan="2" class="text-center">Previous FY</th></tr></thead>
+ <tbody>
+ <tr><td></td><td>Filed</td><td>Pending</td><td>Filed</td><td>Pending</td></tr>
+ <tr><td>Working Conditions</td><td class="num">{{ default(p3_wc_filed_current, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(p3_wc_pending_current, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(p3_wc_filed_prev, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(p3_wc_pending_prev, "&lt;Not provided&gt;") }}</td></tr>
+ <tr><td>Health &amp; Safety</td><td class="num">{{ default(p3_hs_filed_current, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(p3_hs_pending_current, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(p3_hs_filed_prev, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(p3_hs_pending_prev, "&lt;Not provided&gt;") }}</td></tr>
+ </tbody>
+ </table>
+
+ <p>14. Assessments for the year (health &amp; safety practices and working conditions of value chain, % of plants and offices assessed):</p>
+ <blockquote class="narrative">{{ default(p3_value_chain_assessment, "&lt;Not provided&gt;") }}</blockquote>
+
+ <p>15. Corrective actions taken on significant risks/concerns arising from assessments:</p>
+ <blockquote class="narrative">{{ default(p3_corrective_actions, "&lt;Not provided&gt;") }}</blockquote>
+
+ <h4><span class="indicator-label indicator-leadership">Leadership</span> Indicators</h4>
+ <p>1. Life insurance/compensation extended to family members of employees/workers in the event of death:</p>
+ <blockquote class="narrative">{{ default(p3_death_compensation_details, "&lt;Not provided&gt;") }}</blockquote>
+ <p>2. Measures to check the potential impacts of products and services on human rights, disability inclusion:</p>
+ <blockquote class="narrative">{{ default(p3_disability_inclusion_measures, "&lt;Not provided&gt;") }}</blockquote>
+ <p>3. Return to work and retention rates for value chain workers on parental leave:</p>
+ <blockquote class="narrative">{{ default(p3_value_chain_parental_leave, "&lt;Not provided&gt;") }}</blockquote>
+ <p>4. Grievance mechanism to raise work-related grievances for value chain workers:</p>
+ <blockquote class="narrative">{{ default(p3_value_chain_grievance_mechanism, "&lt;Not provided&gt;") }}</blockquote>
+ <p>5. Extension of transition assistance programs to facilitate continued employability post retirement/termination:</p>
+ <blockquote class="narrative">{{ default(p3_transition_assistance_programs, "&lt;Not provided&gt;") }}</blockquote>
+
+ <div class="page-break"></div>
+
+ <!-- ============================= PRINCIPLE 4 ============================= -->
+ <div class="principle-band"><img class="band-img" loading="lazy" onerror="this.style.visibility='hidden'" alt="Community stakeholders in discussion" src="https://images.unsplash.com/photo-1531482615713-2afd69097998?w=300&q=60&auto=format&fit=crop"><span class="band-text"><span class="principle-no">Principle 4</span><span class="principle-title">Businesses should respect the interests of and be responsive to all its Stakeholders</span></span></div>
+
+ <h4><span class="indicator-label indicator-essential">Essential</span> Indicators</h4>
+ <p>1. Process for identifying key stakeholder groups:</p>
+ <blockquote class="narrative">{{ default(p4_stakeholder_identification_process, "&lt;Not provided&gt;") }}</blockquote>
+ <p>2. List of stakeholder groups identified and engagement details:</p>
+ <table>
+ <thead><tr><th>Stakeholder Group</th><th>Vulnerable &amp; Marginalized (Y/N)</th><th>Channels of Communication</th><th>Frequency of Engagement</th><th>Purpose &amp; Scope of Engagement</th></tr></thead>
+ <tbody>
+ {% for s in p4_stakeholder_engagement %}
+ <tr>
+ <td>{{ default(s.group_name, "&lt;Not provided&gt;") }}</td><td class="text-center">{{ default(s.vulnerable_marginalized, "&lt;Not provided&gt;") }}</td>
+ <td>{{ default(s.channels, "&lt;Not provided&gt;") }}</td><td>{{ default(s.frequency, "&lt;Not provided&gt;") }}</td><td>{{ default(s.purpose_scope, "&lt;Not provided&gt;") }}</td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+
+ <h4><span class="indicator-label indicator-leadership">Leadership</span> Indicators</h4>
+ <p>1. Processes for consultation with stakeholders on economic, environmental, and social topics, and how
+ outcomes are incorporated into policies:</p>
+ <blockquote class="narrative">{{ default(p4_consultation_process, "&lt;Not provided&gt;") }}</blockquote>
+ <p>2. Consultation with stakeholders for identification and management of environmental and social topics
+ for vulnerable/marginalized groups:</p>
+ <blockquote class="narrative">{{ default(p4_vulnerable_groups_consultation, "&lt;Not provided&gt;") }}</blockquote>
+ <p>3. Instances where stakeholder consultation resulted in a positive/negative outcome:</p>
+ <blockquote class="narrative">{{ default(p4_consultation_outcomes, "&lt;Not provided&gt;") }}</blockquote>
+
+ <div class="page-break"></div>
+
+ <!-- ============================= PRINCIPLE 5 ============================= -->
+ <div class="principle-band"><img class="band-img" loading="lazy" onerror="this.style.visibility='hidden'" alt="Hands joined together, representing human rights" src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=300&q=60&auto=format&fit=crop"><span class="band-text"><span class="principle-no">Principle 5</span><span class="principle-title">Businesses should respect and promote Human Rights</span></span></div>
+
+ <h4><span class="indicator-label indicator-essential">Essential</span> Indicators</h4>
+ <p>1. Employees and workers who have been provided training on human rights issues:</p>
+ <table>
+ <thead><tr><th rowspan="2">Category</th><th colspan="2" class="text-center">Current FY</th><th colspan="2" class="text-center">Previous FY</th></tr>
+ <tr><th>Total (A)</th><th>% covered</th><th>Total (A)</th><th>% covered</th></tr>
+ </thead>
+ <tbody>
+ {% for t in p5_hr_training %}
+ <tr><td>{{ default(t.category, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(t.total_current, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(t.pct_current, "&lt;Not provided&gt;") }}%</td><td class="num">{{ default(t.total_prev, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(t.pct_prev, "&lt;Not provided&gt;") }}%</td></tr>
+ {% endfor %}
+ </tbody>
+ </table>
+
+ <p>2. Details of minimum wages paid to employees and workers:</p>
+ <table>
+ <thead><tr><th rowspan="2">Category</th><th rowspan="2">Total (A)</th>
+ <th colspan="2" class="text-center">Equal to Minimum Wage</th><th colspan="2" class="text-center">More than Minimum Wage</th></tr>
+ <tr><th>Male</th><th>Female</th><th>Male</th><th>Female</th></tr>
+ </thead>
+ <tbody>
+ {% for w in p5_minimum_wages %}
+ <tr><td>{{ default(w.category, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(w.total, "&lt;Not provided&gt;") }}</td>
+ <td class="num">{{ default(w.equal_male, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(w.equal_female, "&lt;Not provided&gt;") }}</td>
+ <td class="num">{{ default(w.more_male, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(w.more_female, "&lt;Not provided&gt;") }}</td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+
+ <p>3. Details of remuneration/salary/wages (median remuneration of Board of Directors/KMPs/Employees/Workers):</p>
+ <table>
+ <thead><tr><th></th><th>Male - Number</th><th>Male - Median remuneration (₹)</th><th>Female - Number</th><th>Female - Median remuneration (₹)</th></tr></thead>
+ <tbody>
+ {% for r in p5_remuneration %}
+ <tr><td>{{ default(r.category, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(r.male_number, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(r.male_median, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(r.female_number, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(r.female_median, "&lt;Not provided&gt;") }}</td></tr>
+ {% endfor %}
+ </tbody>
+ </table>
+
+ <p>4. Focal point responsible for addressing human rights impacts/concerns:</p>
+ <blockquote class="narrative">{{ default(p5_focal_point_details, "&lt;Not provided&gt;") }}</blockquote>
+
+ <p>5. Internal mechanisms in place to redress grievances related to human rights issues:</p>
+ <blockquote class="narrative">{{ default(p5_grievance_mechanism, "&lt;Not provided&gt;") }}</blockquote>
+
+ <p>6. Number of Complaints on human rights issues:</p>
+ <table>
+ <thead><tr><th>Category</th><th colspan="2" class="text-center">Current FY</th><th colspan="2" class="text-center">Previous FY</th></tr></thead>
+ <tbody>
+ <tr><td></td><td>Filed</td><td>Pending</td><td>Filed</td><td>Pending</td></tr>
+ {% for c in p5_hr_complaints %}
+ <tr><td>{{ default(c.category, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(c.filed_current, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(c.pending_current, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(c.filed_prev, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(c.pending_prev, "&lt;Not provided&gt;") }}</td></tr>
+ {% endfor %}
+ </tbody>
+ </table>
+
+ <p>7. Mechanisms to prevent adverse consequences to complainant in discrimination/harassment cases:</p>
+ <blockquote class="narrative">{{ default(p5_anti_retaliation_mechanism, "&lt;Not provided&gt;") }}</blockquote>
+
+ <p>8. Human rights requirements as part of business agreements and contracts:</p>
+ <blockquote class="narrative">{{ default(p5_hr_in_contracts, "&lt;Not provided&gt;") }}</blockquote>
+
+ <p>9. Assessments for the year (child labour, forced/involuntary labour, sexual harassment, discrimination
+ at workplace, wages, others - % of plants/offices assessed):</p>
+ <table>
+ <thead><tr><th>Category</th><th>% of plants/offices assessed</th></tr></thead>
+ <tbody>
+ {% for a in p5_hr_assessments %}
+ <tr><td>{{ default(a.category, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(a.pct_assessed, "&lt;Not provided&gt;") }}%</td></tr>
+ {% endfor %}
+ </tbody>
+ </table>
+
+ <p>10. Corrective actions taken on significant risks/concerns arising from human rights assessments:</p>
+ <blockquote class="narrative">{{ default(p5_corrective_actions, "&lt;Not provided&gt;") }}</blockquote>
+
+ <h4><span class="indicator-label indicator-leadership">Leadership</span> Indicators</h4>
+ <p>1. Details of a business process being modified/introduced as a result of addressing human rights grievances/complaints:</p>
+ <blockquote class="narrative">{{ default(p5_process_modification, "&lt;Not provided&gt;") }}</blockquote>
+ <p>2. % of value chain partners assessed for human rights impacts and corrective actions taken:</p>
+ <blockquote class="narrative">{{ default(p5_value_chain_hr_assessment, "&lt;Not provided&gt;") }}</blockquote>
+
+ <div class="page-break"></div>
+
+ <!-- ============================= PRINCIPLE 6 ============================= -->
+ <div class="principle-band"><img class="band-img" loading="lazy" onerror="this.style.visibility='hidden'" alt="Green forest canopy, representing environmental stewardship" src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=300&q=60&auto=format&fit=crop"><span class="band-text"><span class="principle-no">Principle 6</span><span class="principle-title">Businesses should respect and make efforts to protect and restore the Environment</span></span></div>
+
+ <h4><span class="indicator-label indicator-essential">Essential</span> Indicators</h4>
+ <p>1. Details of total energy consumption and energy intensity:</p>
+ <table>
+ <thead><tr><th>Parameter</th><th>FY {{ default(current_fy, "&lt;Not provided&gt;") }} (Current)</th><th>FY {{ default(previous_fy, "&lt;Not provided&gt;") }} (Previous)</th></tr></thead>
+ <tbody>
+ {% for e in p6_energy %}
+ <tr><td>{{ default(e.parameter, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(e.current_value, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(e.previous_value, "&lt;Not provided&gt;") }}</td></tr>
+ {% endfor %}
+ </tbody>
+ </table>
+
+ <!-- Chart 1: Energy consumption grouped bar -->
+ <div class="chart-card">
+ <h4>Chart: Total Energy Consumption</h4>
+ <div class="chart-subtitle">By source, current vs. previous financial year (GJ)</div>
+ <div class="chart-canvas-wrap"><canvas id="chartEnergy"></canvas></div>
+ <details class="chart-table-toggle"><summary>View underlying data table</summary>
+ <table class="chart-data-table">
+ <thead><tr><th>Parameter</th><th>Current FY</th><th>Previous FY</th></tr></thead>
+ <tbody>
+ {% for e in p6_energy %}
+ <tr><td>{{ default(e.parameter, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(e.current_value, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(e.previous_value, "&lt;Not provided&gt;") }}</td></tr>
+ {% endfor %}
+ </tbody>
+ </table>
+ </details>
+ </div>
+
+ <p>2. Does the entity have any sites/facilities identified as designated consumers under the PAT scheme?</p>
+ <blockquote class="narrative">{{ default(p6_pat_scheme_details, "&lt;Not provided&gt;") }}</blockquote>
+
+ <p>3. Details of water withdrawal, consumption and discharge:</p>
+ <table>
+ <thead><tr><th>Parameter</th><th>FY {{ default(current_fy, "&lt;Not provided&gt;") }} (Current)</th><th>FY {{ default(previous_fy, "&lt;Not provided&gt;") }} (Previous)</th></tr></thead>
+ <tbody>
+ {% for w in p6_water_withdrawal %}
+ <tr><td>{{ default(w.parameter, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(w.current_value, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(w.previous_value, "&lt;Not provided&gt;") }}</td></tr>
+ {% endfor %}
+ </tbody>
+ </table>
+
+ <!-- Chart 3: Water withdrawal by source (doughnut) -->
+ <div class="chart-card">
+ <h4>Chart: Water Withdrawal by Source</h4>
+ <div class="chart-subtitle">Current financial year, KL</div>
+ <div class="chart-canvas-wrap short"><canvas id="chartWater"></canvas></div>
+ <details class="chart-table-toggle"><summary>View underlying data table</summary>
+ <table class="chart-data-table">
+ <thead><tr><th>Source</th><th>KL - Current FY</th></tr></thead>
+ <tbody>
+ {% for w in p6_water_withdrawal %}
+ <tr><td>{{ default(w.parameter, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(w.current_value, "&lt;Not provided&gt;") }}</td></tr>
+ {% endfor %}
+ </tbody>
+ </table>
+ </details>
+ </div>
+
+ <p>Water discharge by destination and treatment level:</p>
+ <table>
+ <thead><tr><th>Destination</th><th>Treatment Level</th><th>Current FY (KL)</th><th>Previous FY (KL)</th></tr></thead>
+ <tbody>
+ {% for d in p6_water_discharge %}
+ <tr><td>{{ default(d.destination, "&lt;Not provided&gt;") }}</td><td>{{ default(d.treatment_level, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(d.current_value, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(d.previous_value, "&lt;Not provided&gt;") }}</td></tr>
+ {% endfor %}
+ </tbody>
+ </table>
+
+ <!-- Chart: Water discharge by destination (doughnut) -->
+ <div class="chart-card">
+ <h4>Chart: Water Discharge by Destination</h4>
+ <div class="chart-subtitle">Current financial year, KL</div>
+ <div class="chart-canvas-wrap short"><canvas id="chartWaterDischarge"></canvas></div>
+ <details class="chart-table-toggle"><summary>View underlying data table</summary>
+ <table class="chart-data-table">
+ <thead><tr><th>Destination</th><th>KL - Current FY</th></tr></thead>
+ <tbody>
+ {% for d in p6_water_discharge %}
+ <tr><td>{{ default(d.destination, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(d.current_value, "&lt;Not provided&gt;") }}</td></tr>
+ {% endfor %}
+ </tbody>
+ </table>
+ </details>
+ </div>
+
+ <p>4. Water intensity per rupee of turnover:</p>
+ <table>
+ <tbody>
+ <tr><td width="55%">Water intensity (KL/₹ Cr) - Current FY</td><td class="num">{{ default(p6_water_intensity_turnover_current, "&lt;Not provided&gt;") }}</td></tr>
+ <tr><td>Water intensity (KL/₹ Cr) - Previous FY</td><td class="num">{{ default(p6_water_intensity_turnover_prev, "&lt;Not provided&gt;") }}</td></tr>
+ </tbody>
+ </table>
+
+ <p>5. Zero Liquid Discharge - is the entity implementing a mechanism for Zero Liquid Discharge?</p>
+ <blockquote class="narrative">{{ default(p6_zld_status, "&lt;Not provided&gt;") }}</blockquote>
+
+ <p>6. Air emissions (other than GHG) - details:</p>
+ <table>
+ <thead><tr><th>Parameter</th><th>Unit</th><th>Current FY</th><th>Previous FY</th></tr></thead>
+ <tbody>
+ {% for a in p6_air_emissions %}
+ <tr><td>{{ default(a.parameter, "&lt;Not provided&gt;") }}</td><td>{{ default(a.unit, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(a.current_value, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(a.previous_value, "&lt;Not provided&gt;") }}</td></tr>
+ {% endfor %}
+ </tbody>
+ </table>
+
+ <p>7. Greenhouse Gas (GHG) emissions (Scope 1 and Scope 2) and their intensity:</p>
+ <table>
+ <thead><tr><th>Parameter</th><th>Unit</th><th>Current FY</th><th>Previous FY</th></tr></thead>
+ <tbody>
+ {% for g in p6_ghg_emissions %}
+ <tr><td>{{ default(g.parameter, "&lt;Not provided&gt;") }}</td><td>{{ default(g.unit, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(g.current_value, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(g.previous_value, "&lt;Not provided&gt;") }}</td></tr>
+ {% endfor %}
+ </tbody>
+ </table>
+
+ <!-- Chart 2: GHG emissions stacked bar (Scope 1 + 2) -->
+ <div class="chart-card">
+ <h4>Chart: GHG Emissions (Scope 1 &amp; Scope 2)</h4>
+ <div class="chart-subtitle">Metric tonnes CO2e, current vs. previous financial year (excludes intensity ratio - see table)</div>
+ <div class="chart-canvas-wrap"><canvas id="chartGhg"></canvas></div>
+ <details class="chart-table-toggle"><summary>View underlying data table</summary>
+ <table class="chart-data-table">
+ <thead><tr><th>Parameter</th><th>Current FY</th><th>Previous FY</th></tr></thead>
+ <tbody>
+ {% for g in p6_ghg_emissions %}
+ <tr><td>{{ default(g.parameter, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(g.current_value, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(g.previous_value, "&lt;Not provided&gt;") }}</td></tr>
+ {% endfor %}
+ </tbody>
+ </table>
+ </details>
+ </div>
+
+ <p>Scope 3 GHG emissions and Scope 1/2/3 comparison:</p>
+ <table>
+ <thead><tr><th>Scope</th><th>Unit</th><th>Current FY</th><th>Previous FY</th></tr></thead>
+ <tbody>
+ {% for s in p6_scope123_emissions %}
+ <tr><td>{{ default(s.scope_name, "&lt;Not provided&gt;") }}</td><td>{{ default(s.unit, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(s.current_value, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(s.previous_value, "&lt;Not provided&gt;") }}</td></tr>
+ {% endfor %}
+ </tbody>
+ </table>
+
+ <!-- Chart: Scope 1/2/3 emissions comparison -->
+ <div class="chart-card">
+ <h4>Chart: Scope 1, 2 &amp; 3 Emissions Comparison</h4>
+ <div class="chart-subtitle">Metric tonnes CO2e, current financial year</div>
+ <div class="chart-canvas-wrap"><canvas id="chartScope123"></canvas></div>
+ <details class="chart-table-toggle"><summary>View underlying data table</summary>
+ <table class="chart-data-table">
+ <thead><tr><th>Scope</th><th>Current FY</th></tr></thead>
+ <tbody>
+ {% for s in p6_scope123_emissions %}
+ <tr><td>{{ default(s.scope_name, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(s.current_value, "&lt;Not provided&gt;") }}</td></tr>
+ {% endfor %}
+ </tbody>
+ </table>
+ </details>
+ </div>
+
+ <p>8. Does the entity have any project related to reducing GHG emissions?</p>
+ <blockquote class="narrative">{{ default(p6_ghg_reduction_projects, "&lt;Not provided&gt;") }}</blockquote>
+
+ <p>9. Comprehensive Environmental Impact Assessments (EIA) undertaken:</p>
+ <table>
+ <thead><tr><th>Project/Activity</th><th>EIA Notification No.</th><th>Date</th><th>Whether conducted by independent external agency</th><th>Results communicated in public domain (Y/N)</th><th>Relevant web link</th></tr></thead>
+ <tbody>
+ {% for eia in p6_eia %}
+ <tr><td>{{ default(eia.project_activity, "&lt;Not provided&gt;") }}</td><td>{{ default(eia.notification_no, "&lt;Not provided&gt;") }}</td><td>{{ default(eia.date, "&lt;Not provided&gt;") }}</td><td class="text-center">{{ default(eia.independent_agency, "&lt;Not provided&gt;") }}</td><td class="text-center">{{ default(eia.publicly_communicated, "&lt;Not provided&gt;") }}</td><td>{{ default(eia.web_link, "&lt;Not provided&gt;") }}</td></tr>
+ {% endfor %}
+ </tbody>
+ </table>
+
+ <p>10. Compliance with applicable environmental law/regulations/guidelines:</p>
+ <blockquote class="narrative">{{ default(p6_environmental_compliance, "&lt;Not provided&gt;") }}</blockquote>
+
+ <div class="page-break"></div>
+
+ <p>11. Details of waste generated and management practices:</p>
+ <table>
+ <thead><tr><th>Parameter</th><th>Unit</th><th>Current FY</th><th>Previous FY</th></tr></thead>
+ <tbody>
+ {% for w in p6_waste %}
+ <tr><td>{{ default(w.category, "&lt;Not provided&gt;") }}</td><td>{{ default(w.unit, "MT") }}</td><td class="num">{{ default(w.current_value, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(w.previous_value, "&lt;Not provided&gt;") }}</td></tr>
+ {% endfor %}
+ </tbody>
+ </table>
+
+ <!-- Chart 4: Waste by category horizontal bar -->
+ <div class="chart-card">
+ <h4>Chart: Waste Generated by Category</h4>
+ <div class="chart-subtitle">Metric tonnes, current vs. previous financial year</div>
+ <div class="chart-canvas-wrap"><canvas id="chartWaste"></canvas></div>
+ <details class="chart-table-toggle"><summary>View underlying data table</summary>
+ <table class="chart-data-table">
+ <thead><tr><th>Category</th><th>Current FY</th><th>Previous FY</th></tr></thead>
+ <tbody>
+ {% for w in p6_waste %}
+ <tr><td>{{ default(w.category, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(w.current_value, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(w.previous_value, "&lt;Not provided&gt;") }}</td></tr>
+ {% endfor %}
+ </tbody>
+ </table>
+ </details>
+ </div>
+
+ <p>12. Details of specific initiatives on resource efficiency or circular economy adopted:</p>
+ <blockquote class="narrative">{{ default(p6_circular_economy_initiatives, "&lt;Not provided&gt;") }}</blockquote>
+
+ <p>13. Does the entity have a plan or strategy for transition to a low carbon economy?</p>
+ <blockquote class="narrative">{{ default(p6_low_carbon_transition_plan, "&lt;Not provided&gt;") }}</blockquote>
+
+ <p>14. Name and brief details of projects for reducing environmental sustainability impacts, if undertaken:</p>
+ <blockquote class="narrative">{{ default(p6_sustainability_projects, "&lt;Not provided&gt;") }}</blockquote>
+
+ <p>15. Does the entity have a business continuity and disaster management plan?</p>
+ <blockquote class="narrative">{{ default(p6_business_continuity_plan, "&lt;Not provided&gt;") }}</blockquote>
+
+ <p>16. Disclosure of any significant adverse impact to the environment, arising from the value chain,
+ and mitigation action taken:</p>
+ <blockquote class="narrative">{{ default(p6_value_chain_adverse_impact, "&lt;Not provided&gt;") }}</blockquote>
+
+ <p>17. Percentage of value chain partners (by value of business done) that were assessed for
+ environmental impacts:</p>
+ <table>
+ <tbody><tr><td width="55%">% of value chain partners assessed</td><td class="num">{{ default(p6_value_chain_env_assessment_pct, "&lt;Not provided&gt;") }}%</td></tr></tbody>
+ </table>
+
+ <h4><span class="indicator-label indicator-leadership">Leadership</span> Indicators</h4>
+ <p>1. Water discharge (as per WWF Water Risk Filter or similar tool) in areas of water stress:</p>
+ <blockquote class="narrative">{{ default(p6_water_stress_area_discharge, "&lt;Not provided&gt;") }}</blockquote>
+ <p>2. Renewable energy consumed/sourced - details:</p>
+ <table>
+ <tbody>
+ <tr><td width="55%">Renewable energy consumption (%) - Current FY</td><td class="num">{{ default(current_renewable_energy_pct, "&lt;Not provided&gt;") }}%</td></tr>
+ <tr><td>Renewable energy consumption (%) - Previous FY</td><td class="num">{{ default(previous_renewable_energy_pct, "&lt;Not provided&gt;") }}%</td></tr>
+ </tbody>
+ </table>
+ <p>3. Percentage of value chain partners assessed for environmental impacts and corrective actions taken:</p>
+ <blockquote class="narrative">{{ default(p6_value_chain_corrective_actions, "&lt;Not provided&gt;") }}</blockquote>
+ <p>4. Sustainable business practices from ISO 14001, 45001, energy audits etc.:</p>
+ <blockquote class="narrative">{{ default(p6_certifications_audits, "&lt;Not provided&gt;") }}</blockquote>
+ <p>5. Business continuity plan for climate-related events:</p>
+ <blockquote class="narrative">{{ default(p6_climate_bcp, "&lt;Not provided&gt;") }}</blockquote>
+
+ <div class="page-break"></div>
+
+ <!-- ============================= PRINCIPLE 7 ============================= -->
+ <div class="principle-band"><img class="band-img" loading="lazy" onerror="this.style.visibility='hidden'" alt="Government building, representing policy advocacy" src="https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=300&q=60&auto=format&fit=crop"><span class="band-text"><span class="principle-no">Principle 7</span><span class="principle-title">Businesses, when engaging in influencing public and regulatory policy, should do so in a Manner that is Responsible and Transparent</span></span></div>
+
+ <h4><span class="indicator-label indicator-essential">Essential</span> Indicators</h4>
+ <p>1. Details of affiliation with trade and industry chambers/associations:</p>
+ <table>
+ <thead><tr><th>S. No.</th><th>Name of trade and industry chambers/associations</th><th>Reach of trade and industry chambers/associations (State/National)</th></tr></thead>
+ <tbody>
+ {% for a in p7_trade_associations %}
+ <tr><td>{{ loop.index }}</td><td>{{ default(a.name, "&lt;Not provided&gt;") }}</td><td>{{ default(a.reach, "&lt;Not provided&gt;") }}</td></tr>
+ {% endfor %}
+ </tbody>
+ </table>
+
+ <p>2. Details of anti-competitive conduct - corrective action taken/underway, on any issues related to
+ anti-competitive conduct:</p>
+ <table>
+ <thead><tr><th>Name of authority</th><th>Brief of the case</th><th>Corrective action taken</th></tr></thead>
+ <tbody>
+ {% for c in p7_anticompetitive_cases %}
+ <tr><td>{{ default(c.authority_name, "&lt;Not provided&gt;") }}</td><td>{{ default(c.brief_case, "&lt;Not provided&gt;") }}</td><td>{{ default(c.corrective_action, "&lt;Not provided&gt;") }}</td></tr>
+ {% endfor %}
+ </tbody>
+ </table>
+
+ <h4><span class="indicator-label indicator-leadership">Leadership</span> Indicators</h4>
+ <p>1. Details of public policy positions advocated by the entity:</p>
+ <table>
+ <thead><tr><th>Public policy advocated</th><th>Method resorted for such advocacy</th><th>Whether information available in public domain (Y/N)</th><th>Frequency of Review by Board (Annually/Half yearly/Quarterly/Others)</th><th>Web link, if available</th></tr></thead>
+ <tbody>
+ {% for p in p7_policy_advocacy %}
+ <tr><td>{{ default(p.policy_name, "&lt;Not provided&gt;") }}</td><td>{{ default(p.method, "&lt;Not provided&gt;") }}</td><td class="text-center">{{ default(p.publicly_available, "&lt;Not provided&gt;") }}</td><td>{{ default(p.review_frequency, "&lt;Not provided&gt;") }}</td><td>{{ default(p.web_link, "&lt;Not provided&gt;") }}</td></tr>
+ {% endfor %}
+ </tbody>
+ </table>
+
+ <div class="page-break"></div>
+
+ <!-- ============================= PRINCIPLE 8 ============================= -->
+ <div class="principle-band"><img class="band-img" loading="lazy" onerror="this.style.visibility='hidden'" alt="Rural community members, representing inclusive growth" src="https://images.unsplash.com/photo-1509099836639-18ba1795216d?w=300&q=60&auto=format&fit=crop"><span class="band-text"><span class="principle-no">Principle 8</span><span class="principle-title">Businesses should promote Inclusive Growth and Equitable Development</span></span></div>
+
+ <h4><span class="indicator-label indicator-essential">Essential</span> Indicators</h4>
+ <p>1. Details of Social Impact Assessments (SIA) undertaken:</p>
+ <table>
+ <thead><tr><th>Name &amp; brief details of project</th><th>SIA Notification No.</th><th>Date of notification</th><th>Whether conducted by independent external agency (Y/N)</th><th>Results communicated in public domain (Y/N)</th><th>Relevant web link</th></tr></thead>
+ <tbody>
+ {% for s in p8_sia %}
+ <tr><td>{{ default(s.project_name, "&lt;Not provided&gt;") }}</td><td>{{ default(s.notification_no, "&lt;Not provided&gt;") }}</td><td>{{ default(s.notification_date, "&lt;Not provided&gt;") }}</td><td class="text-center">{{ default(s.independent_agency, "&lt;Not provided&gt;") }}</td><td class="text-center">{{ default(s.publicly_communicated, "&lt;Not provided&gt;") }}</td><td>{{ default(s.web_link, "&lt;Not provided&gt;") }}</td></tr>
+ {% endfor %}
+ </tbody>
+ </table>
+
+ <p>2. Information on Rehabilitation and Resettlement (R&amp;R) of project affected persons:</p>
+ <table>
+ <thead><tr><th>Name of project for which R&amp;R is ongoing</th><th>State</th><th>District</th><th>No. of Project Affected Families (PAFs)</th><th>% of PAFs covered by R&amp;R</th><th>Amounts paid to PAFs (₹)</th></tr></thead>
+ <tbody>
+ {% for r in p8_rehabilitation %}
+ <tr><td>{{ default(r.project_name, "&lt;Not provided&gt;") }}</td><td>{{ default(r.state, "&lt;Not provided&gt;") }}</td><td>{{ default(r.district, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(r.pafs_count, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(r.pct_covered, "&lt;Not provided&gt;") }}%</td><td class="num">{{ default(r.amount_paid, "&lt;Not provided&gt;") }}</td></tr>
+ {% endfor %}
+ </tbody>
+ </table>
+
+ <p>3. Describe the mechanisms to receive and redress grievances of the community:</p>
+ <blockquote class="narrative">{{ default(p8_community_grievance_mechanism, "&lt;Not provided&gt;") }}</blockquote>
+
+ <p>4. Percentage of input material sourced from suppliers:</p>
+ <table>
+ <thead><tr><th>Category</th><th>FY {{ default(current_fy, "&lt;Not provided&gt;") }} (Current)</th><th>FY {{ default(previous_fy, "&lt;Not provided&gt;") }} (Previous)</th></tr></thead>
+ <tbody>
+ <tr><td>Directly sourced from MSMEs/small producers</td><td class="num">{{ default(p8_msme_sourcing_current, "&lt;Not provided&gt;") }}%</td><td class="num">{{ default(p8_msme_sourcing_prev, "&lt;Not provided&gt;") }}%</td></tr>
+ <tr><td>Sourced directly from within the district and neighbouring districts</td><td class="num">{{ default(p8_local_sourcing_current, "&lt;Not provided&gt;") }}%</td><td class="num">{{ default(p8_local_sourcing_prev, "&lt;Not provided&gt;") }}%</td></tr>
+ </tbody>
+ </table>
+
+ <h4><span class="indicator-label indicator-leadership">Leadership</span> Indicators</h4>
+ <p>1. Actions taken to identify and mitigate negative social impacts, if any, on communities:</p>
+ <blockquote class="narrative">{{ default(p8_negative_impact_mitigation, "&lt;Not provided&gt;") }}</blockquote>
+ <p>2. Percentage of input material sourced from local and small suppliers, contribution to well-being of
+ communities in the entity's operating locations:</p>
+ <blockquote class="narrative">{{ default(p8_local_supplier_wellbeing, "&lt;Not provided&gt;") }}</blockquote>
+ <p>3. Details of a project undertaken by the entity that benefit the community/vulnerable and marginalized
+ groups, CSR projects:</p>
+ <table>
+ <thead><tr><th>CSR Project</th><th>State</th><th>Aspiration District (Y/N)</th><th>Amount spent (₹)</th></tr></thead>
+ <tbody>
+ {% for c in p8_csr_project_details %}
+ <tr><td>{{ default(c.project_name, "&lt;Not provided&gt;") }}</td><td>{{ default(c.state, "&lt;Not provided&gt;") }}</td><td class="text-center">{{ default(c.aspirational_district, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(c.amount_spent, "&lt;Not provided&gt;") }}</td></tr>
+ {% endfor %}
+ </tbody>
+ </table>
+
+ <div class="page-break"></div>
+
+ <!-- ============================= PRINCIPLE 9 ============================= -->
+ <div class="principle-band"><img class="band-img" loading="lazy" onerror="this.style.visibility='hidden'" alt="Customer service representative assisting a consumer" src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=300&q=60&auto=format&fit=crop"><span class="band-text"><span class="principle-no">Principle 9</span><span class="principle-title">Businesses should engage with and provide value to their Consumers in a Responsible Manner</span></span></div>
+
+ <h4><span class="indicator-label indicator-essential">Essential</span> Indicators</h4>
+ <p>1. Mechanisms in place to receive and respond to consumer complaints and feedback:</p>
+ <blockquote class="narrative">{{ default(p9_consumer_feedback_mechanism, "&lt;Not provided&gt;") }}</blockquote>
+
+ <p>2. Turnover of products and/services as a percentage of turnover from all products/services that carry
+ information about environmental and social parameters relevant to the product:</p>
+ <table>
+ <tbody><tr><td width="55%">% of total turnover</td><td class="num">{{ default(p9_labelled_products_turnover_pct, "&lt;Not provided&gt;") }}%</td></tr></tbody>
+ </table>
+
+ <p>3. Number of consumer complaints in respect of the following categories:</p>
+ <table>
+ <thead><tr><th rowspan="2">Category</th><th colspan="3" class="text-center">FY {{ default(current_fy, "&lt;Not provided&gt;") }} (Current)</th><th colspan="3" class="text-center">FY {{ default(previous_fy, "&lt;Not provided&gt;") }} (Previous)</th></tr>
+ <tr><th>Received</th><th>Pending</th><th>Remarks</th><th>Received</th><th>Pending</th><th>Remarks</th></tr>
+ </thead>
+ <tbody>
+ {% for c in p9_complaints %}
+ <tr>
+ <td>{{ default(c.category, "&lt;Not provided&gt;") }}</td>
+ <td class="num">{{ default(c.received_current, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(c.pending_current, "&lt;Not provided&gt;") }}</td><td>{{ default(c.remarks_current, "&lt;Not provided&gt;") }}</td>
+ <td class="num">{{ default(c.received_prev, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(c.pending_prev, "&lt;Not provided&gt;") }}</td><td>{{ default(c.remarks_prev, "&lt;Not provided&gt;") }}</td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+
+ <!-- Chart 7: Consumer complaints by category grouped bar -->
+ <div class="chart-card">
+ <h4>Chart: Consumer Complaints by Category</h4>
+ <div class="chart-subtitle">Received, current vs. previous financial year</div>
+ <div class="chart-canvas-wrap"><canvas id="chartComplaints"></canvas></div>
+ <details class="chart-table-toggle"><summary>View underlying data table</summary>
+ <table class="chart-data-table">
+ <thead><tr><th>Category</th><th>Current FY</th><th>Previous FY</th></tr></thead>
+ <tbody>
+ {% for c in p9_complaints %}
+ <tr><td>{{ default(c.category, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(c.received_current, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(c.received_prev, "&lt;Not provided&gt;") }}</td></tr>
+ {% endfor %}
+ </tbody>
+ </table>
+ </details>
+ </div>
+
+ <p>4. Details of product recalls on account of safety issues:</p>
+ <table>
+ <thead><tr><th>Product Category</th><th>No. of recalls</th><th>Reason for recall</th></tr></thead>
+ <tbody>
+ {% for r in p9_product_recalls %}
+ <tr><td>{{ default(r.product_category, "&lt;Not provided&gt;") }}</td><td class="num">{{ default(r.recall_count, "&lt;Not provided&gt;") }}</td><td>{{ default(r.reason, "&lt;Not provided&gt;") }}</td></tr>
+ {% endfor %}
+ </tbody>
+ </table>
+
+ <p>5. Does the entity have a framework/policy on cyber security and risks related to data privacy?</p>
+ <blockquote class="narrative">{{ default(p9_cyber_security_policy, "&lt;Not provided&gt;") }}</blockquote>
+
+ <p>6. Provide details of any corrective actions taken or underway on issues relating to advertising, and
+ delivery of essential services; cyber security and data privacy of customers; re-occurrence of
+ instances of product recalls; penalty/action taken by regulatory authorities on safety of products/services:</p>
+ <blockquote class="narrative">{{ default(p9_corrective_actions, "&lt;Not provided&gt;") }}</blockquote>
+
+ <h4><span class="indicator-label indicator-leadership">Leadership</span> Indicators</h4>
+ <p>1. Channels/platforms where information on products/services is available (e.g. product labels, provider
+ website, advertisements):</p>
+ <blockquote class="narrative">{{ default(p9_info_channels, "&lt;Not provided&gt;") }}</blockquote>
+ <p>2. Steps taken to inform and educate consumers about safe and responsible usage of products/services:</p>
+ <blockquote class="narrative">{{ default(p9_consumer_education_steps, "&lt;Not provided&gt;") }}</blockquote>
+ <p>3. Mechanisms in place to inform consumers of any risk of disruption/discontinuation of essential
+ services:</p>
+ <blockquote class="narrative">{{ default(p9_service_disruption_mechanism, "&lt;Not provided&gt;") }}</blockquote>
+ <p>4. Does the entity display product information on the product over and above what is mandated as per
+ local laws?</p>
+ <blockquote class="narrative">{{ default(p9_additional_product_info, "&lt;Not provided&gt;") }}</blockquote>
+ <p>5. Consumer survey results relating to data privacy of its consumers:</p>
+ <blockquote class="narrative">{{ default(p9_data_privacy_survey_results, "&lt;Not provided&gt;") }}</blockquote>
+ </div>
+
+ <!-- ================================================================
+ BRSR CORE: ASSURANCE KPI CROSS-REFERENCE
+ ================================================================ -->
+ <div class="section viz-root" id="section-core">
+ <h2>BRSR CORE: ASSURANCE KPI CROSS-REFERENCE</h2>
+ <p class="section-intro">BRSR Core is a sub-set of the BRSR Essential Indicators identified for assurance,
+ as per SEBI Annexure I. The table below cross-references each Core KPI with the Principle and
+ question it maps back to in Sections A–C above.</p>
+ <table>
+ <thead><tr><th>Attribute</th><th>KPI</th><th>Unit</th><th>Current FY</th><th>Previous FY</th><th>Principle</th><th>Reference Question</th></tr></thead>
+ <tbody>
+ {% for k in brsr_core_kpis %}
+ <tr>
+ <td>{{ default(k.attribute, "&lt;Not provided&gt;") }}</td>
+ <td>{{ default(k.kpi_name, "&lt;Not provided&gt;") }}</td>
+ <td>{{ default(k.unit, "&lt;Not provided&gt;") }}</td>
+ <td class="num">{{ default(k.current_value, "&lt;Not provided&gt;") }}</td>
+ <td class="num">{{ default(k.previous_value, "&lt;Not provided&gt;") }}</td>
+ <td class="text-center">{{ default(k.principle_ref, "&lt;Not provided&gt;") }}</td>
+ <td>{{ default(k.question_ref, "&lt;Not provided&gt;") }}</td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+
+ <h3>Assurance Statement</h3>
+ <blockquote class="narrative">{{ default(assurance_statement_summary, "&lt;Not provided&gt;") }}</blockquote>
+ </div>
+
+ <div class="footer-note no-print">
+ Rendered by the BRSR reporting pipeline &middot; Chart.js CDN dependency &middot; See README.md for the
+ fill-guide and offline fallback notes.
+ </div>
+
+ <!-- ================================================================
+ CHART.JS - CDN + CHART DEFINITIONS
+ (Data tables above are the source of truth; canvases render the
+ same values. If Chart.js fails to load (offline / blocked CDN),
+ the adjacent <details class="chart-table-toggle"> tables next to
+ each canvas remain fully readable - tooltips enhance, never gate.)
+ ================================================================ -->
+ <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+ <script>
+ (function () {
+ if (typeof Chart === 'undefined') { return; }
+
+ var root = getComputedStyle(document.documentElement);
+ var css = function (name) { return root.getPropertyValue(name).trim(); };
+
+ var seriesColors = [
+ css('--series-1'), css('--series-2'), css('--series-3'), css('--series-4'),
+ css('--series-5'), css('--series-6'), css('--series-7'), css('--series-8')
+ ];
+ var inkSecondary = css('--viz-ink-secondary');
+ var gridline = css('--viz-gridline');
+
+ Chart.defaults.font.family = "system-ui, -apple-system, 'Segoe UI', sans-serif";
+ Chart.defaults.color = inkSecondary;
+ Chart.defaults.borderColor = gridline;
+ Chart.defaults.plugins.legend.labels.usePointStyle = true;
+ Chart.defaults.plugins.tooltip.enabled = true;
+
+ function baseBarOptions(extra) {
+ return Object.assign({
+ responsive: true,
+ maintainAspectRatio: false,
+ scales: {
+ x: { grid: { display: false } },
+ y: { beginAtZero: true, grid: { color: gridline } }
+ },
+ plugins: { legend: { position: 'top' } }
+ }, extra || {});
+ }
+
+ function baseDoughnutOptions() {
+ return {
+ responsive: true,
+ maintainAspectRatio: false,
+ plugins: { legend: { position: 'right' } }
+ };
+ }
+
+ function el(id) { return document.getElementById(id); }
+
+ // Chart 1: Energy consumption (grouped bar)
+ if (el('chartEnergy')) {
+ var energyData = {{ default(p6_energy, []) }};
+ new Chart(el('chartEnergy'), {
+ type: 'bar',
+ data: {
+ labels: energyData.map(function (d) { return d.parameter; }),
+ datasets: [
+ { label: 'Current FY', data: energyData.map(function (d) { return d.current_num || 0; }), backgroundColor: seriesColors[0], borderRadius: 4, maxBarThickness: 24 },
+ { label: 'Previous FY', data: energyData.map(function (d) { return d.previous_num || 0; }), backgroundColor: seriesColors[1], borderRadius: 4, maxBarThickness: 24 }
+ ]
+ },
+ options: baseBarOptions()
+ });
+ }
+
+ // Chart 2: GHG emissions (stacked bar, Scope 1 + 2)
+ if (el('chartGhg')) {
+ var ghgData = {{ default(chart_ghg_filtered, []) }};
+ new Chart(el('chartGhg'), {
+ type: 'bar',
+ data: {
+ labels: ['Current FY', 'Previous FY'],
+ datasets: ghgData.map(function (d, i) {
+ return {
+ label: d.parameter,
+ data: [d.current_num || 0, d.previous_num || 0],
+ backgroundColor: seriesColors[i % seriesColors.length],
+ borderRadius: 4,
+ maxBarThickness: 24
+ };
+ })
+ },
+ options: baseBarOptions({ scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, beginAtZero: true, grid: { color: gridline } } } })
+ });
+ }
+
+ // Chart 3: Water withdrawal by source (doughnut)
+ if (el('chartWater')) {
+ var waterData = {{ default(p6_water_withdrawal, []) }};
+ new Chart(el('chartWater'), {
+ type: 'doughnut',
+ data: {
+ labels: waterData.map(function (d) { return d.parameter; }),
+ datasets: [{ data: waterData.map(function (d) { return d.current_num || 0; }), backgroundColor: seriesColors, borderColor: css('--viz-surface'), borderWidth: 2 }]
+ },
+ options: baseDoughnutOptions()
+ });
+ }
+
+ // Water discharge by destination (doughnut)
+ if (el('chartWaterDischarge')) {
+ var dischargeData = {{ default(p6_water_discharge, []) }};
+ new Chart(el('chartWaterDischarge'), {
+ type: 'doughnut',
+ data: {
+ labels: dischargeData.map(function (d) { return d.destination; }),
+ datasets: [{ data: dischargeData.map(function (d) { return d.current_num || 0; }), backgroundColor: seriesColors, borderColor: css('--viz-surface'), borderWidth: 2 }]
+ },
+ options: baseDoughnutOptions()
+ });
+ }
+
+ // Chart 4: Waste by category (horizontal bar)
+ if (el('chartWaste')) {
+ var wasteData = {{ default(p6_waste, []) }};
+ new Chart(el('chartWaste'), {
+ type: 'bar',
+ data: {
+ labels: wasteData.map(function (d) { return d.category; }),
+ datasets: [
+ { label: 'Current FY', data: wasteData.map(function (d) { return d.current_num || 0; }), backgroundColor: seriesColors[0], borderRadius: 4, maxBarThickness: 24 },
+ { label: 'Previous FY', data: wasteData.map(function (d) { return d.previous_num || 0; }), backgroundColor: seriesColors[1], borderRadius: 4, maxBarThickness: 24 }
+ ]
+ },
+ options: baseBarOptions({ indexAxis: 'y', scales: { x: { beginAtZero: true, grid: { color: gridline } }, y: { grid: { display: false } } } })
+ });
+ }
+
+ // Chart 5: Gender diversity (grouped bar)
+ if (el('chartGenderDiversity')) {
+ new Chart(el('chartGenderDiversity'), {
+ type: 'bar',
+ data: {
+ labels: ['Employees', 'Workers'],
+ datasets: [
+ { label: 'Male', data: {{ default(chart_gender_male, [0, 0]) }}, backgroundColor: seriesColors[0], borderRadius: 4, maxBarThickness: 24 },
+ { label: 'Female', data: {{ default(chart_gender_female, [0, 0]) }}, backgroundColor: seriesColors[4], borderRadius: 4, maxBarThickness: 24 }
+ ]
+ },
+ options: baseBarOptions()
+ });
+ }
+
+ // Chart 6: CSR obligation vs spend (plain grouped bar - single axis; dual-axis combo rejected)
+ if (el('chartCsrSpend')) {
+ new Chart(el('chartCsrSpend'), {
+ type: 'bar',
+ data: {
+ labels: ['CSR Obligation', 'CSR Spent'],
+ datasets: [{
+ label: '₹ Crore',
+ data: {{ default(chart_csr_values, [0, 0]) }},
+ backgroundColor: [seriesColors[0], seriesColors[2]],
+ borderRadius: 4,
+ maxBarThickness: 24
+ }]
+ },
+ options: baseBarOptions({ plugins: { legend: { display: false } } })
+ });
+ }
+
+ // Chart 7: Consumer complaints by category (grouped bar)
+ if (el('chartComplaints')) {
+ var complaintsData = {{ default(p9_complaints, []) }};
+ new Chart(el('chartComplaints'), {
+ type: 'bar',
+ data: {
+ labels: complaintsData.map(function (d) { return d.category; }),
+ datasets: [
+ { label: 'Current FY', data: complaintsData.map(function (d) { return d.current_num || 0; }), backgroundColor: seriesColors[0], borderRadius: 4, maxBarThickness: 24 },
+ { label: 'Previous FY', data: complaintsData.map(function (d) { return d.previous_num || 0; }), backgroundColor: seriesColors[1], borderRadius: 4, maxBarThickness: 24 }
+ ]
+ },
+ options: baseBarOptions()
+ });
+ }
+
+ // Scope 1/2/3 emissions comparison (bar)
+ if (el('chartScope123')) {
+ var scopeData = {{ default(p6_scope123_emissions, []) }};
+ new Chart(el('chartScope123'), {
+ type: 'bar',
+ data: {
+ labels: scopeData.map(function (d) { return d.scope_name || d.scope; }),
+ datasets: [{
+ label: 'Current FY (t CO2e)',
+ data: scopeData.map(function (d) { return d.current_num || 0; }),
+ backgroundColor: seriesColors.slice(0, scopeData.length),
+ borderRadius: 4,
+ maxBarThickness: 24
+ }]
+ },
+ options: baseBarOptions({ plugins: { legend: { display: false } } })
+ });
+ }
+
+ // Safety incidents small multiples (bar)
+ if (el('chartSafety')) {
+ var safetyData = {{ default(chart_safety_filtered, []) }};
+ new Chart(el('chartSafety'), {
+ type: 'bar',
+ data: {
+ labels: safetyData.map(function (d) { return d.category ? (d.metric_name + ' (' + d.category + ')') : d.metric_name; }),
+ datasets: [
+ { label: 'Current FY', data: safetyData.map(function (d) { return d.current_num || 0; }), backgroundColor: seriesColors[0], borderRadius: 4, maxBarThickness: 24 },
+ { label: 'Previous FY', data: safetyData.map(function (d) { return d.previous_num || 0; }), backgroundColor: seriesColors[1], borderRadius: 4, maxBarThickness: 24 }
+ ]
+ },
+ options: baseBarOptions({ indexAxis: 'y' })
+ });
+ }
+ })();
+ </script>
+</body>
+</html>

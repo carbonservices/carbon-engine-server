@@ -1,0 +1,5 @@
+add_subdirectory(logging)
+add_subdirectory(system)
+add_subdirectory(common)
+add_subdirectory(offline-processing)
+add_subdirectory(gcloud-processing)
