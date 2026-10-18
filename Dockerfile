@@ -81,6 +81,12 @@ COPY --from=builder /workspace/__Builds/x64/bin/eng.traineddata /app/eng.trained
 RUN chmod +x /app/carbon-engine && \
     chown -R carbon:carbon /app
 
+# OCI standard annotations for GitHub Packages integration
+LABEL org.opencontainers.image.title="carbon-engine-server" \
+      org.opencontainers.image.description="Carbon Engine C++20 Headless REST API Server" \
+      org.opencontainers.image.source="https://github.com/carbonservices/carbon-engine-server" \
+      org.opencontainers.image.licenses="GPL-3.0"
+
 # Environment defaults for Cloud Run container contract
 ENV PORT=8080 \
     CARBON_ENGINE_PORT=8080 \

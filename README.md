@@ -1,160 +1,72 @@
 # Carbon Engine Server
 
-Native C++20 Headless REST API Server for Corporate ESG & BRSR Compliance Analytics.
-
-This repository contains the `carbon-engine` server daemon packaged as a lightweight container image for deployment on **Google Cloud Run**, AWS ECS, or Kubernetes.
+Headless C++20 REST API daemon for corporate ESG and statutory SEBI BRSR compliance analytics, automated extraction, vector search, and audit report generation.
 
 ---
 
-## Table of Contents
-
-- [Overview & Architecture](#overview--architecture)
-- [Quick Start with Docker](#quick-start-with-docker)
-- [Google Cloud Run Deployment Guide](#google-cloud-run-deployment-guide)
-  - [Prerequisites](#prerequisites)
-  - [1. Build & Push Container Image](#1-build--push-container-image)
-  - [2. Deploy Service to Cloud Run](#2-deploy-service-to-cloud-run)
-  - [3. Verify Cloud Run Deployment](#3-verify-cloud-run-deployment)
-  - [4. Connecting Clients to Cloud Run](#4-connecting-clients-to-cloud-run)
-- [Environment Variables](#environment-variables)
-- [Supported REST APIs](#supported-rest-apis)
-- [API Reference Guide (API.md)](API.md)
-- [Local Compilation (Without Docker)](#local-compilation-without-docker)
-- [Contributing & Security](#contributing--security)
-- [License](#license)
-
----
-
-## Overview & Architecture
-
-`carbon-engine` is an asynchronous, headless C++20 REST server designed for corporate ESG compliance, statutory SEBI BRSR metric extraction, and audit report generation.
-
-### Core Stack
+## Architecture & Components
 
 | Component | Technology | Purpose |
 |---|---|---|
-| **Core Runtime** | C++20, Qt 6 (Core, HttpServer, Network, Sql) | High-performance asynchronous REST API server |
-| **LLM Inference** | Google Gemini API (`gemini-2.5-flash`, `gemini-2.0-flash`) | Statutory ESG metric extraction and schema validation |
-| **Vector Search** | `text-embedding-004` + FAISS C++ | Dense vector embeddings and semantic context retrieval |
-| **Document Engine** | PDFium + Tesseract 5.3 OCR | Native PDF text extraction with OCR image fallback |
-| **Data Persistence** | SQLite 3 (WAL mode) | Relational persistence for jobs, chunks, facts, and audit logs |
-| **Report Generator** | Inja (C++ Jinja-compatible template engine) | Standalone HTML compliance reports with provenance anchors |
-| **Container Target** | Multi-stage Docker image (121 MB runtime) | Optimized for Google Cloud Run, AWS ECS, and Kubernetes |
+| **HTTP Server** | Qt 6 (`QHttpServer`, C++20) | Asynchronous non-blocking REST API |
+| **Inference** | Google Gemini API | Statutory BRSR metric extraction |
+| **Vector Search** | FAISS + `text-embedding-004` | 768-dim dense embedding index and retrieval |
+| **Document Engine** | PDFium + Tesseract 5.3 OCR | Native PDF text extraction with OCR fallback |
+| **Storage** | SQLite 3 (WAL mode) | Relational persistence for jobs, chunks, facts, and audit logs |
+| **Reports** | Inja (C++ Jinja template engine) | Standalone HTML compliance report rendering |
 
-### Key Architectural Attributes
-
-| Attribute | Specification | Operational Benefit |
-|---|---|---|
-| **Cost Model** | Bring Your Own Key (`X-Gemini-API-Key` header / payload) | Zero server-side LLM costs; users pay for their own tokens |
-| **Compliance Scope** | SEBI BRSR Principles P1–P9, General & Management Disclosures | Strict schema enforcement with automated JSON repair |
-| **Memory Footprint** | ~56 MB idle process RAM | Runs cost-effectively on small Cloud Run pods (512 MB – 1 GB) |
-| **Observability** | Mirrored stdout/stderr + `/app/data/logs/*.log` | Real-time telemetry ingestion into Google Cloud Logging |
-| **Cloud Run Contract** | Auto-detects `$PORT`, listens on `0.0.0.0`, `/api/system` health check | Native zero-configuration serverless auto-scaling |
+> [!NOTE]
+> **Authentication Model**: Bring-Your-Own-Key (BYOK). Clients pass their Gemini API key per request via the `X-Gemini-API-Key` header or `api_key` payload parameter. The server does not store or manage server-wide API credentials.
 
 ---
 
-## Quick Start with Docker
+## Container Deployment
 
-### 1. Build the Docker Image
-Inside WSL / Linux:
-```bash
-docker build -t carbon-engine-server:latest .
-```
+Prebuilt container images are published to GitHub Container Registry:
+`ghcr.io/carbonservices/carbon-engine-server:latest` (or tagged by pipeline run `:run-<number>`).
 
-### 2. Run Locally in Docker
+### 1. Run Locally (Docker)
+
 ```bash
 docker run -d \
   --name carbon-engine \
   -p 8080:8080 \
   -v carbon_data:/app/data \
-  carbon-engine-server:latest
+  ghcr.io/carbonservices/carbon-engine-server:latest
 ```
 
-### 3. Verify Health Check
+Health check:
 ```bash
 curl http://localhost:8080/api/system
 ```
 
----
+### 2. Deploy to Google Cloud Run
 
-## Google Cloud Run Deployment Guide
-
-### Prerequisites
-- [Google Cloud SDK (`gcloud`)](https://cloud.google.com/sdk/docs/install) installed and authenticated.
-- A Google Cloud Project with Cloud Run and Artifact Registry APIs enabled.
-
-### 1. Build & Push Container Image
-Set your GCP project ID and region:
-```bash
-export PROJECT_ID="your-gcp-project-id"
-export REGION="us-central1"
-export REPO_NAME="carbon-repo"
-export IMAGE_TAG="us-central1-docker.pkg.dev/${PROJECT_ID}/${REPO_NAME}/carbon-engine:latest"
-
-# Create Artifact Registry Docker repository (if not already existing)
-gcloud artifacts repositories create ${REPO_NAME} \
-    --repository-format=docker \
-    --location=${REGION} \
-    --description="Carbon Engine Container Repository"
-
-# Configure Docker credentials for GCP Artifact Registry
-gcloud auth configure-docker ${REGION}-docker.pkg.dev
-
-# Build and tag image
-docker build -t ${IMAGE_TAG} .
-
-# Push image to Artifact Registry
-docker push ${IMAGE_TAG}
-```
-
-### 2. Deploy Service to Cloud Run
-Deploy the container with 2 vCPUs, 2 GiB memory, and dynamic port configuration:
 ```bash
 gcloud run deploy carbon-engine \
-    --image=${IMAGE_TAG} \
-    --platform=managed \
-    --region=${REGION} \
-    --allow-unauthenticated \
-    --memory=2Gi \
-    --cpu=2 \
-    --concurrency=80 \
-    --min-instances=0 \
-    --max-instances=10 \
-    --set-env-vars=CARBON_ENGINE_CLOUD_ENABLED=1,CARBON_ENGINE_BIND_ALL=1,CARBON_ENGINE_CLOUD_MODEL=gemini-2.5-flash
+  --image=ghcr.io/carbonservices/carbon-engine-server:latest \
+  --platform=managed \
+  --region=us-central1 \
+  --allow-unauthenticated \
+  --port=8080 \
+  --memory=2Gi \
+  --cpu=2 \
+  --concurrency=80
 ```
 
-### 3. Verify Cloud Run Deployment
-Once deployed, retrieve your public HTTPS service URL:
+### 3. Client Connection
+
+The desktop client (`carbon-engine-client`) connects to the server via the `CARBON_ENGINE_SERVER_URL` environment variable:
+
 ```bash
-export SERVICE_URL=$(gcloud run services describe carbon-engine --platform=managed --region=${REGION} --format='value(status.url)')
-echo "Service URL: ${SERVICE_URL}"
-
-# Query live system telemetry
-curl "${SERVICE_URL}/api/system"
-
-# Test Gemini inference connection with client key
-curl -H "X-Gemini-API-Key: YOUR_GEMINI_KEY" -X POST "${SERVICE_URL}/api/config/test"
-```
-
-### 4. Connecting Clients to Cloud Run
-
-Clients communicate with the engine via standard HTTP REST requests.
-
-To point the desktop client (`carbon-engine-client`) to your Cloud Run deployment, set the `CARBON_ENGINE_SERVER_URL` environment variable before launching:
-
-**Windows (PowerShell):**
-```powershell
-$env:CARBON_ENGINE_SERVER_URL = "https://carbon-engine-xxxxx-uc.a.run.app"
+# Windows (PowerShell)
+$env:CARBON_ENGINE_SERVER_URL = "https://<SERVICE_URL>"
 ./carbon-engine-client.exe
-```
 
-**Linux / macOS:**
-```bash
-export CARBON_ENGINE_SERVER_URL="https://carbon-engine-xxxxx-uc.a.run.app"
+# Linux / macOS
+export CARBON_ENGINE_SERVER_URL="https://<SERVICE_URL>"
 ./carbon-engine-client
 ```
-
-Any custom client (Python, Node.js, cURL, Web UI) can make direct HTTP calls to `SERVICE_URL` using the endpoints documented in [API.md](API.md).
 
 ---
 
@@ -162,89 +74,70 @@ Any custom client (Python, Node.js, cURL, Web UI) can make direct HTTP calls to 
 
 | Variable | Default | Description |
 |---|---|---|
-| `PORT` | `8080` | Port for the HTTP server. Auto-detected in Cloud Run. |
-| `CARBON_ENGINE_PORT` | `8080` | Fallback port override if `PORT` is not defined. |
-| `CARBON_ENGINE_BIND_ALL` | `1` in Docker | Set to `1` to listen on `0.0.0.0` (all interfaces). Auto-enabled on Cloud Run (`K_SERVICE`) and Docker (`/.dockerenv`). |
-| `CARBON_ENGINE_DB_PATH` | `/app/data/ce-database.sqlite` | Absolute path to the persistent SQLite database file. |
-| `CARBON_ENGINE_UPLOAD_DIR` | `/app/data/uploads` | Scratch directory where uploaded ingestion files are saved. |
-| `CARBON_ENGINE_LOG_DIR` | `/app/data/logs` | Directory where daily service logs are stored. |
-| `CARBON_ENGINE_CLOUD_ENABLED`| `1` | Enables Cloud Mode (`GCLOUD`) by default. |
-| `CARBON_ENGINE_CLOUD_MODEL` | `gemini-2.5-flash` | Default Gemini model name for extraction. |
-| `CARBON_ENGINE_EMBD_MODEL` | `text-embedding-004` | Embedding model for semantic vector searches. |
-| `CARBON_ENGINE_THREADS` | auto (2-8) | Number of worker threads for ingestion / CPU execution. |
-| `TESSDATA_PREFIX` | `/app` | Path to directory containing `eng.traineddata`. |
+| `PORT` | `8080` | Server listening port (auto-detected on Cloud Run). |
+| `CARBON_ENGINE_BIND_ALL` | `1` | Binds to `0.0.0.0` inside container environments. |
+| `CARBON_ENGINE_DB_PATH` | `/app/data/ce-database.sqlite` | SQLite database file location. |
+| `CARBON_ENGINE_UPLOAD_DIR` | `/app/data/uploads` | Scratch directory for uploaded documents. |
+| `CARBON_ENGINE_LOG_DIR` | `/app/data/logs` | Service log directory. |
+| `CARBON_ENGINE_CLOUD_ENABLED` | `1` | Enables Gemini cloud processing (`GCLOUD` mode). |
+| `CARBON_ENGINE_CLOUD_MODEL` | `gemini-2.5-flash` | Default Gemini extraction model. |
+| `CARBON_ENGINE_EMBD_MODEL` | `text-embedding-004` | Default Gemini embedding model. |
+| `CARBON_ENGINE_THREADS` | auto | Worker thread count for CPU pipelines. |
+| `TESSDATA_PREFIX` | `/app` | Directory containing `eng.traineddata` OCR language files. |
 
 ---
 
-## Supported REST APIs
+## API Reference
 
-All endpoints return JSON responses and support global CORS (`Access-Control-Allow-Origin: *`, `Access-Control-Allow-Headers: Content-Type, Authorization, X-Gemini-API-Key`).
+All endpoints return JSON responses and support global CORS. For complete request/response schemas, JSON payloads, and `curl` examples, consult [**API.md**](API.md).
 
-> 📖 **Full Specification**: For complete JSON request/response payloads, field types, and `curl` command examples, consult the [**REST API Specification Guide (API.md)**](API.md).
-
-### API Reference Table
-
-| Category | Method | Endpoint | Description | Auth / Key |
-|---|---|---|---|---|
-| **System & Health** | `GET` | `/api/system` | Hardware telemetry, database size, queue depth, engine phase | Public |
-| **System & Health** | `GET` | `/logo.png` | Static branding asset image | Public |
-| **Configuration** | `GET` | `/api/mode` | View active mode (`GCLOUD` / `OFFLINE`), active models & pacing | Public |
-| **Configuration** | `POST` | `/api/mode` | Set processing mode and active models | Public |
-| **Configuration** | `POST` | `/api/config/test` | Validate Gemini connection and measure round-trip latency | `X-Gemini-API-Key` / Body |
-| **Configuration** | `GET` / `POST` | `/api/models` | List available models from Google AI Studio | `X-Gemini-API-Key` / Body |
-| **Ingestion** | `POST` | `/api/upload` | Upload PDF files (Base64) to scratch directory | Public |
-| **Ingestion** | `POST` | `/api/ingest` | Enqueue documents for parsing, OCR, and vector indexing | `X-Gemini-API-Key` / Body |
-| **Ingestion** | `GET` | `/api/jobs` | Query status of an ingestion job (`PENDING`, `PROCESSING`, `COMPLETED`, `FAILED`) | Query `?job_id=` |
-| **Ingestion** | `POST` | `/api/jobs/cancel` | Cancel in-flight document processing job | Body `job_id` |
-| **Ingestion** | `POST` | `/api/jobs/rate_limit` | Resolve embedding rate limit (`retry`, `switch_model`, `switch_local`, `cancel`) | Body `job_id` |
-| **Ingestion** | `GET` | `/api/documents` | List documents and chunk counts within a job | Query `?job_id=` |
-| **Extraction** | `POST` | `/api/extraction/start` | Trigger statutory compliance metric extraction for a job | `X-Gemini-API-Key` / Body |
-| **Extraction** | `GET` | `/api/extraction/status` | Live extraction progress, active section, tokens, and missing fields | Query `?job_id=` |
-| **Extraction** | `POST` | `/api/extraction/cancel` | Cancel active statutory extraction pipeline | Body `job_id` |
-| **Extraction** | `POST` | `/api/extraction/rate_limit` | Resolve inference rate limit (`retry`, `switch_model`, `switch_local`, `cancel`) | Body `job_id` |
-| **Audit Review** | `GET` | `/api/extraction/sections` | Fetch extracted metric values and source chunk IDs by section | Query `?job_id=` |
-| **Audit Review** | `PUT` | `/api/extraction/sections` | Manually modify extracted draft metric values during review | Body |
-| **Audit Review** | `POST` | `/api/extraction/accept` | Finalize draft section and lock values into verified state | Body |
-| **Reports** | `POST` | `/api/report/export` | Render standalone HTML compliance report with Inja templates | Body |
-| **Reports** | `GET` | `/api/reports` | List all historical reports and audit sessions | Public |
-| **Reports** | `DELETE`| `/api/reports` | Delete report, SQLite records, vector index, and cached facts | Query `?job_id=` |
-| **Catalog** | `GET` | `/api/schema/brsr` | Retrieve statutory schema metadata (Principles P1–P9, metrics) | Public |
+| Method | Endpoint | Description | Auth / Key |
+|---|---|---|---|
+| `GET` | `/api/system` | Hardware telemetry, memory, queue depth, database size | Public |
+| `GET` | `/logo.png` | Static branding image asset | Public |
+| `GET` | `/api/mode` | View active mode (`GCLOUD`/`OFFLINE`), active models, pacing | Public |
+| `POST` | `/api/mode` | Update processing mode and active models | Public |
+| `POST` | `/api/config/test` | Validate Gemini connection and measure round-trip latency | `X-Gemini-API-Key` |
+| `GET` / `POST` | `/api/models` | List available models from Google AI Studio | `X-Gemini-API-Key` |
+| `POST` | `/api/upload` | Upload Base64 PDF files to scratch directory | Public |
+| `POST` | `/api/ingest` | Enqueue documents for parsing, OCR, and vector indexing | `X-Gemini-API-Key` |
+| `GET` | `/api/jobs` | Query status of an ingestion job (`?job_id=`) | Public |
+| `POST` | `/api/jobs/cancel` | Cancel in-flight document processing job | Public |
+| `POST` | `/api/jobs/rate_limit` | Resolve embedding rate limit state | Public |
+| `GET` | `/api/documents` | List documents and chunk counts within a job (`?job_id=`) | Public |
+| `POST` | `/api/extraction/start` | Trigger statutory compliance metric extraction | `X-Gemini-API-Key` |
+| `GET` | `/api/extraction/status` | Extraction progress, active section, tokens (`?job_id=`) | Public |
+| `POST` | `/api/extraction/cancel` | Cancel active statutory extraction pipeline | Public |
+| `POST` | `/api/extraction/rate_limit` | Resolve inference rate limit state | Public |
+| `GET` | `/api/extraction/sections` | Fetch extracted metric values and chunk IDs by section (`?job_id=`) | Public |
+| `PUT` | `/api/extraction/sections` | Manually modify draft metric values during review | Public |
+| `POST` | `/api/extraction/accept` | Finalize draft section and lock values | Public |
+| `POST` | `/api/report/export` | Render standalone HTML compliance report | Public |
+| `GET` | `/api/reports` | List all historical reports and audit sessions | Public |
+| `DELETE` | `/api/reports` | Delete job, SQLite records, and vector index (`?job_id=`) | Public |
+| `GET` | `/api/schema/brsr` | Retrieve statutory schema metadata (Principles P1-P9) | Public |
 
 ---
 
 ## Local Compilation (Without Docker)
 
-On Ubuntu 22.04 / 24.04:
+Requires Ubuntu 22.04+ with Qt 6 (`qt6-base-dev`, `qt6-httpserver-dev`), OpenBLAS, and Tesseract.
 
 ```bash
-sudo apt-get update && sudo apt-get install -y \
-  build-essential ninja-build cmake git curl \
-  qt6-base-dev qt6-httpserver-dev \
-  libopenblas-dev liblapack-dev \
-  libtesseract-dev libleptonica-dev
-
-# Configure and compile
 cmake -B build -G "Ninja" \
   -DCMAKE_BUILD_TYPE=Release \
   -DCARBON_ENGINE_DOWNLOAD_MODELS=OFF
 
 cmake --build build --config Release --parallel $(nproc)
 
-# Execute
 ./build/__Builds/x64/bin/carbon-engine
 ```
 
 ---
 
-## Contributing & Security
+## Standards & Policies
 
-- **Contributing Guide**: Please review [CONTRIBUTING.md](CONTRIBUTING.md) for C++20 standards, asynchronous HTTP server guidelines, and PR workflows.
-- **Security Policy**: For vulnerability reporting channels and BYOK credential isolation architecture, consult [SECURITY.md](SECURITY.md).
-- **Code of Conduct**: Community interaction standards are outlined in [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
-
----
-
-## License
-
-This project is licensed under the [GNU General Public License v3.0 (GPLv3)](LICENSE).
-
+- [CONTRIBUTING.md](CONTRIBUTING.md): C++20 standards, asynchronous HTTP handlers, and PR workflows.
+- [SECURITY.md](SECURITY.md): Security policy and vulnerability disclosure channels.
+- [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md): Contributor Covenant v2.1.
+- [LICENSE](LICENSE): GNU General Public License v3.0 (GPLv3).
